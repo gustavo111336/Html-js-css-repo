@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="neon.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Neon-SS Super Six</title>
+</head>
+<body>
+  <center>
+  <h1>Neon-SS</h1>
+  <a href="https://gustavo111336.github.io/My-repo/html.html">
+  <button>Meta</button>
+</a>
+<div class="container">
+  <h1>Contador: <span id="contador">0</span></h1>
+  
+  <button id="botao-clique">Meta-Button</button>
+  <button id="botao-reset">Reset</button>
+</div>
+
+<script>
+  // 1. Selecionamos os elementos do HTML
+  const displayContador = document.getElementById('contador');
+  const btnClique = document.getElementById('botao-clique');
+  const btnReset = document.getElementById('botao-reset');
+
+  // 2. Criamos a variável que guarda o valor
+  let valor = 0;
+
+  // 3. Função para aumentar o contador
+  btnClique.addEventListener('click', () => {
+    valor++; // Aumenta 1
+    displayContador.innerText = valor; // Atualiza o texto na tela
+  });
+
+  // 4. Função para resetar
+  btnReset.addEventListener('click', () => {
+    valor = 0;
+    displayContador.innerText = valor;
+  });
+</script>
+  </center>
+</body>
+</html>

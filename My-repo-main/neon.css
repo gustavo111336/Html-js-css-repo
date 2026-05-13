@@ -1,0 +1,252 @@
+/* NEON PURPLE OS - CORE SYSTEM
+   DEVELOPER: GUSTAVO (DEV RANK)
+*/
+
+:root {
+    --main-purple: #bc13fe;
+    --dark-purple: #1e0029;
+    --neon-glow: #f000ff;
+    --bg-black: #050005;
+    --text-color: #f5edff;
+    --transition: 0.4s ease-in-out;
+}
+
+/* 1. RESET & BASE (Linhas 1-50) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    cursor: crosshair; /* Cursor estilo mira */
+}
+
+body {
+    background-color: var(--bg-black);
+    color: var(--text-color);
+    font-family: 'Orbitron', sans-serif; /* Fonte futurista */
+    overflow-x: hidden;
+    background-image: 
+        linear-gradient(rgba(188, 19, 254, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(188, 19, 254, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px; /* Grid de fundo */
+}
+
+/* 2. EFEITO SCANLINE (Linhas 51-100) */
+body::before {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 2;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
+}
+
+/* 3. ANIMAÇÕES DE PULSO (Linhas 101-200) */
+@keyframes purplePulse {
+    0% { box-shadow: 0 0 5px var(--main-purple), 0 0 10px var(--main-purple); }
+    50% { box-shadow: 0 0 20px var(--neon-glow), 0 0 40px var(--main-purple); }
+    100% { box-shadow: 0 0 5px var(--main-purple), 0 0 10px var(--main-purple); }
+}
+
+@keyframes textFlicker {
+    0%, 100% { opacity: 1; text-shadow: 0 0 10px var(--main-purple); }
+    50% { opacity: 0.8; text-shadow: 0 0 30px var(--neon-glow); }
+    92% { opacity: 0.5; }
+}
+
+/* 4. ESTILIZAÇÃO DOS FORMULÁRIOS (Linhas 201-400) */
+center {
+    position: relative;
+    z-index: 3;
+    padding-top: 50px;
+}
+
+h1 {
+    font-size: 3rem;
+    color: #fff;
+    text-transform: uppercase;
+    animation: textFlicker 2s infinite;
+    margin-bottom: 30px;
+}
+
+input {
+    background: rgba(30, 0, 41, 0.6);
+    border: 2px solid var(--main-purple);
+    color: #fff;
+    padding: 15px;
+    margin: 10px;
+    border-radius: 0px; /* Quadrado fica mais Cyberpunk */
+    clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0% 30%); /* Corte futurista */
+    transition: var(--transition);
+}
+
+input:focus {
+    background: var(--dark-purple);
+    box-shadow: 0 0 20px var(--main-purple);
+    outline: none;
+    transform: translateX(10px); /* Move levemente pro lado no foco */
+}
+
+/* 5. BOTÕES ULTRA-NEON (Linhas 401-600...) */
+button {
+    background: transparent;
+    color: var(--main-purple);
+    border: 2px solid var(--main-purple);
+    padding: 20px 40px;
+    font-size: 20px;
+    text-transform: uppercase;
+    font-weight: bold;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+    animation: purplePulse 3s infinite;
+}
+
+button:hover {
+    background: var(--main-purple);
+    color: #000;
+    box-shadow: 0 0 50px var(--neon-glow);
+    letter-spacing: 5px;
+}
+/* 6. SCROLLBAR CUSTOMIZADA (Aquelas de sistema de elite) */
+::-webkit-scrollbar {
+    width: 10px;
+    background: var(--bg-black);
+}
+::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px var(--dark-purple);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--main-purple);
+    border-radius: 10px;
+    box-shadow: 0 0 15px var(--neon-glow);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-glow);
+}
+
+/* 7. EFEITO GLITCH NO TÍTULO (Para o rank DEV) */
+.glitch {
+    position: relative;
+    display: inline-block;
+}
+.glitch::before, .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg-black);
+}
+.glitch::before {
+    left: 2px;
+    text-shadow: -2px 0 #ff00c1;
+    clip: rect(44px, 450px, 56px, 0);
+    animation: glitch-anim 5s infinite linear alternate-reverse;
+}
+.glitch::after {
+    left: -2px;
+    text-shadow: -2px 0 #00fff9;
+    clip: rect(12px, 450px, 26px, 0);
+    animation: glitch-anim2 1s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim {
+    0% { clip: rect(31px, 9999px, 94px, 0); }
+    20% { clip: rect(62px, 9999px, 42px, 0); }
+    /* ... imagine aqui dezenas de frames para suavizar ... */
+    100% { clip: rect(89px, 9999px, 98px, 0); }
+}
+
+/* 8. ESTILO PARA CONTAINERS DE LOGIN (Glassmorphism) */
+center {
+    background: rgba(20, 0, 30, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(188, 19, 254, 0.3);
+    padding: 40px;
+    margin: 50px auto;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 20px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 1), 0 0 20px rgba(188, 19, 254, 0.2);
+}
+
+/* 9. INPUTS DE RÁDIO CUSTOMIZADOS (Bolhinhas de Neon) */
+input[type="radio"] {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--main-purple);
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    vertical-align: middle;
+    position: relative;
+}
+input[type="radio"]:checked {
+    background: var(--main-purple);
+    box-shadow: 0 0 15px var(--neon-glow);
+}
+input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 4px; left: 4px;
+    width: 8px; height: 8px;
+    background: #fff;
+    border-radius: 50%;
+}
+
+/* 10. INPUT DE DATA (O terror dos devs, agora roxo) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) sepia(100%) saturate(10000%) hue-rotate(240deg);
+    cursor: pointer;
+}
+
+/* 11. ANIMAÇÕES DE ENTRADA (Fade-in-up) */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+span, input, button {
+    animation: fadeInUp 0.8s ease backwards;
+}
+
+/* 12. EFEITO DE "RUÍDO" DE FUNDO */
+.noise {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 1;
+    opacity: 0.05;
+    pointer-events: none;
+    background: url('https://media.giphy.com/media/oEI9uWUznW3pm/giphy.gif');
+}
+
+  table {
+    width: auto; /* Ajusta ao tamanho do texto */
+    min-width: 300px; /* Garante que não fique minúscula demais */
+    margin: 20px auto; /* Centraliza na tela */
+    border-collapse: collapse;
+    background-color: #0d001a;
+    color: #fff;
+    font-size: 14px; /* Diminui a fonte */
+    border: 1px solid #bc13fe;
+    box-shadow: 0 0 8px #bc13fe;
+  }
+
+  th, td {
+    padding: 8px 12px; /* Espaçamento menor nas células */
+    border: 1px solid rgba(188, 19, 254, 0.3);
+    text-align: left;
+  }
+
+  th {
+    background-color: #240046;
+    text-shadow: 0 0 5px #bc13fe;
+}

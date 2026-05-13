@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World Animado</title>
+    <style>
+        /* 1. Reset Básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial Black', sans-serif;
+        }
+
+        body, html {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* 2. Layout de Divisão (Split Screen) */
+        .container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .left {
+            flex: 1;
+            background: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1350&q=80'); /* Imagem de montanha */
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* Alinha o texto na borda direita do bloco */
+        }
+
+        .right {
+            flex: 1;
+            background-color: #1a1a1a; /* Cinza bem escuro */
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; /* Alinha o texto na borda esquerda do bloco */
+        }
+
+        /* 3. Estilização do Texto */
+        h1 {
+            font-size: 8rem;
+            text-transform: uppercase;
+            letter-spacing: -5px;
+            line-height: 0.9;
+            white-space: nowrap;
+            animation: slideUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            opacity: 0;
+        }
+
+        /* Cor do texto na parte esquerda (sobre a imagem) */
+        .left h1 {
+            color: white;
+            padding-right: 10px;
+        }
+
+        /* Cor do texto na parte direita (fundo escuro) */
+        .right h1 {
+            color: #d1d1d1;
+            padding-left: 10px;
+        }
+
+        /* 4. Animação de Entrada */
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="left">
+            <h1>Hello ,</h1>
+        </div>
+        <div class="right">
+            <h1>World</h1>
+        </div>
+    </div>
+
+</body>
+</html>

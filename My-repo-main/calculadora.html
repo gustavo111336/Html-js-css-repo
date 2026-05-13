@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora Neon</title>
+    <style>
+        /* Estilo Geral */
+        body {
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            color: white;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px #00fbff, 0 0 20px #00fbff;
+            margin-bottom: 20px;
+            animation: pulsando 1.5s infinite alternate;
+        }
+
+        /* Container da Calculadora */
+        .calc-body {
+            background: #111;
+            padding: 20px;
+            border-radius: 20px;
+            border: 2px solid #00fbff;
+            box-shadow: 0 0 15px #00fbff, inset 0 0 5px #00fbff;
+        }
+
+        /* Visor da Calculadora */
+        #display {
+            width: 100%;
+            height: 60px;
+            background: #000;
+            border: 1px solid #00fbff;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: right;
+            padding: 10px;
+            font-size: 1.5rem;
+            color: #00fbff;
+            text-shadow: 0 0 5px #00fbff;
+            box-sizing: border-box;
+        }
+
+        /* Grade de Botões */
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #00fbff;
+            color: #000;
+            box-shadow: 0 0 20px #00fbff;
+        }
+
+        .operator {
+            color: #00fbff;
+            border-color: #00fbff;
+        }
+
+        .equal {
+            grid-column: span 2;
+            background: #00fbff;
+            color: #000;
+        }
+
+        .clear {
+            grid-column: span 2;
+            color: #ff0055;
+            border-color: #ff0055;
+        }
+
+        .clear:hover {
+            background: #ff0055;
+            box-shadow: 0 0 20px #ff0055;
+        }
+
+        @keyframes pulsando {
+            from { opacity: 0.7; }
+            to { opacity: 1; text-shadow: 0 0 20px #00fbff, 0 0 30px #00fbff; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Neon Supreme</h1>
+
+    <div class="calc-body">
+        <input type="text" id="display" disabled>
+        
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button class="operator" onclick="insert('/')">/</button>
+            <button class="operator" onclick="insert('*')">X</button>
+            
+            <button onclick="insert('7')">7</button>
+            <button onclick="insert('8')">8</button>
+            <button onclick="insert('9')">9</button>
+            <button class="operator" onclick="insert('-')">-</button>
+            
+            <button onclick="insert('4')">4</button>
+            <button onclick="insert('5')">5</button>
+            <button onclick="insert('6')">6</button>
+            <button class="operator" onclick="insert('+')">+</button>
+            
+            <button onclick="insert('1')">1</button>
+            <button onclick="insert('2')">2</button>
+            <button onclick="insert('3')">3</button>
+            <button onclick="calculate()">=</button>
+            
+            <button onclick="insert('0')">0</button>
+            <button onclick="insert('.')">.</button>
+            <button class="equal" onclick="calculate()">TOTAL</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+
+        function insert(value) {
+            display.value += value;
+        }
+
+        function clearDisplay() {
+            display.value = "";
+        }
+
+        function calculate() {
+            try {
+                // O eval() computa a string matemática dentro do visor
+                display.value = eval(display.value);
+            } catch (e) {
+                display.value = "Erro";
+                setTimeout(clearDisplay, 1500);
+            }
+        }
+    </script>
+
+</body>
+</html>

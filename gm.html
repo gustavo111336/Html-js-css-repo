@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GM Studio PRO - O Mundo é Fácil</title>
+    <style>
+        /* CSS DE ALTA PERFORMANCE - DARK MODE VIBE */
+        :root {
+            --bg: #0d0d0d;
+            --panel: #1a1a1a;
+            --accent: #00ff88;
+            --error: #ff4444;
+            --text: #e0e0e0;
+            --font: 'Fira Code', monospace;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background: var(--bg); color: var(--text);
+            font-family: var(--font); overflow: hidden;
+        }
+
+        #app { display: grid; grid-template-columns: 250px 1fr 300px; height: 100vh; }
+
+        /* SIDEBAR */
+        .sidebar { background: var(--panel); border-right: 1px solid #333; padding: 20px; }
+        .sidebar h2 { color: var(--accent); font-size: 1.2rem; margin-bottom: 30px; }
+        .file-item { padding: 10px; cursor: pointer; border-radius: 4px; margin-bottom: 5px; transition: 0.3s; }
+        .file-item:hover { background: #333; }
+        .file-item.active { background: var(--accent); color: #000; font-weight: bold; }
+
+        /* EDITOR AREA */
+        .main-editor { display: flex; flex-direction: column; position: relative; }
+        .tabs { display: flex; background: #111; border-bottom: 1px solid #333; }
+        .tab { padding: 12px 25px; cursor: pointer; border-right: 1px solid #333; opacity: 0.6; }
+        .tab.active { opacity: 1; background: var(--panel); border-bottom: 2px solid var(--accent); }
+
+        textarea {
+            flex: 1; background: var(--panel); border: none; color: #00ff88;
+            padding: 20px; font-size: 16px; outline: none; resize: none;
+            line-height: 1.5;
+        }
+
+        /* CONSOLE & PREVIEW */
+        .right-panel { background: var(--panel); border-left: 1px solid #333; display: flex; flex-direction: column; }
+        #console { flex: 1; padding: 15px; font-size: 12px; overflow-y: auto; color: #aaa; border-bottom: 1px solid #333; }
+        .preview { height: 200px; background: #000; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        
+        /* IA FLOATING WINDOW (Ctrl+#) */
+        #ia-window {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 500px; background: #222; border: 2px solid var(--accent);
+            padding: 20px; display: none; z-index: 1000; box-shadow: 0 0 50px rgba(0,255,136,0.3);
+        }
+        #ia-window input { width: 100%; padding: 10px; background: #000; border: 1px solid var(--accent); color: white; margin-top: 10px; }
+
+        .btn-publish {
+            background: var(--accent); color: #000; border: none; padding: 15px;
+            font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s;
+        }
+        .btn-publish:hover { background: #00cc6e; }
+
+        .status-tag { font-size: 10px; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; background: #333; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div class="sidebar">
+        <h2>GM ENGINE v1.0</h2>
+        <div class="file-item active">📁 Projeto_Alpha</div>
+        <div class="file-item">|_ game_logic.gm</div>
+        <div class="file-item">|_ main_style.gss</div>
+        <div class="file-item">|_ deploy.fgl</div>
+        <div style="margin-top: 50px; font-size: 11px; color: #666;">
+            <strong>ATALHOS:</strong><br>
+            Ctrl + T: Template<br>
+            Ctrl + #: IA Super Pro<br>
+            Ctrl + &: Publicar<br>
+            Tab: Auto-Link
+        </div>
+    </div>
+
+    <div class="main-editor">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('gm')">LOGIC (.gm)</div>
+            <div class="tab" onclick="switchTab('gss')">STYLE (.gss)</div>
+            <div class="tab" onclick="switchTab('fgl')">FRAMEWORK (.fgl)</div>
+        </div>
+        <textarea id="editor" placeholder="Comece a criar..."></textarea>
+    </div>
+
+    <div class="right-panel">
+        <div id="console">
+            [SYS] System Initialized...<br>
+            [SYS] Waiting for formgameload...
+        </div>
+        <div class="preview" id="game-view">
+            <div>
+                <small>GAME PREVIEW</small><br>
+                <span id="game-status">Ocioso</span>
+            </div>
+        </div>
+        <button class="btn-publish" onclick="publishGame()">PUBLICAR (Ctrl + &)</button>
+    </div>
+</div>
+
+<div id="ia-window">
+    <h3 style="color: var(--accent); margin: 0;">IA SUPER PRO MODE ⚡</h3>
+    <p style="font-size: 13px;">O que você quer injetar no código agora?</p>
+    <input type="text" id="ia-prompt" placeholder="Ex: 'Crie um herói pirata que pula alto'..." onkeydown="if(event.key==='Enter') executeIA()">
+    <p style="font-size: 10px; color: #666; margin-top: 10px;">Pressione ENTER para processar.</p>
+</div>
+
+<script>
+    // ESTADO DO APLICATIVO
+    const state = {
+        currentTab: 'gm',
+        files: {
+            gm: `<!gm>\n  estilo -personagem "heroi"\n  andar "wasd"\n  pular "space"\n  objetivo "chegar até o topo"\n\n  formgameload\n</!gm>`,
+            gss: `<config-gss>\n  <gss>\n    <ght>\n      game-load { <form-play:execute-via-java;> }\n    </ght>\n  </gss>\n</config-gss>`,
+            fgl: `<config-fgl>\n  <!-fgl>\n    one-config ("www")\n  </!-fgl>\n</config-fgl>`
+        },
+        links: ["tigrão", "vrau", "mito", "lendario", "brabo"]
+    };
+
+    const editor = document.getElementById('editor');
+    const consoleBox = document.getElementById('console');
+
+    // INICIALIZAÇÃO
+    editor.value = state.files.gm;
+
+    function switchTab(tab) {
+        state.files[state.currentTab] = editor.value; // Salva o atual
+        state.currentTab = tab;
+        editor.value = state.files[tab];
+        
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        log(`Switched to ${tab.toUpperCase()}`);
+    }
+
+    function log(msg, type = 'info') {
+        const color = type === 'error' ? '#ff4444' : (type === 'success' ? '#00ff88' : '#aaa');
+        consoleBox.innerHTML += `<div style="color: ${color}">> ${msg}</div>`;
+        consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
+
+    // LÓGICA DE ATALHOS
+    window.addEventListener('keydown', (e) => {
+        // Ctrl + T (Template)
+        if (e.ctrlKey && e.key === 't') {
+            e.preventDefault();
+            applyTemplate();
+        }
+        // Ctrl + # (IA)
+        if (e.ctrlKey && e.key === '#') {
+            e.preventDefault();
+            document.getElementById('ia-window').style.display = 'block';
+            document.getElementById('ia-prompt').focus();
+        }
+        // Ctrl + & (Publish)
+        if (e.ctrlKey && e.key === '&') {
+            e.preventDefault();
+            publishGame();
+        }
+        // Tab (Auto-complete Link)
+        if (e.key === 'Tab' && editor.value.includes('https://')) {
+            e.preventDefault();
+            autoCompleteLink();
+        }
+    });
+
+    function applyTemplate() {
+        const templates = {
+            gm: `<!gm>\n  andar "wasd"\n  pular "space"\n  pegar "t"\n  objetivo "coletar moedas"\n  formgameload\n</!gm>`,
+            gss: `<config-gss>\n  <ght> game-load { <form-play:execute-via-java;> } </ght>\n</config-gss>`,
+            fgl: `<!-fgl>\n  one-config ("www")\n</!-fgl>`
+        };
+        editor.value = templates[state.currentTab];
+        log(`Template applied to ${state.currentTab}`, 'success');
+    }
+
+    function executeIA() {
+        const prompt = document.getElementById('ia-prompt').value;
+        log(`IA Super Pro processando: "${prompt}"...`);
+        
+        setTimeout(() => {
+            if (state.currentTab === 'gm') {
+                editor.value = editor.value.replace('</!gm>', `  // IA Injected: ${prompt}\n  estilo -mundo "cyber-neon"\n  gravidade 0.5\n</!gm>`);
+            }
+            document.getElementById('ia-window').style.display = 'none';
+            document.getElementById('ia-prompt').value = '';
+            log(`Código injetado com sucesso!`, 'success');
+        }, 1500);
+    }
+
+    function autoCompleteLink() {
+        const lines = editor.value.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes('https://') && !lines[i].includes('.gm.fgl')) {
+                lines[i] = lines[i].trim() + ".gm.fgl.gss.app";
+                log("Link auto-completado com sucesso!");
+            }
+        }
+        editor.value = lines.join('\n');
+    }
+
+    function publishGame() {
+        log("Iniciando processo de build...");
+        
+        // Simulação de Erro Fatal
+        const fglContent = state.files.fgl + editor.value; 
+        if (fglContent.includes('two-config') && !fglContent.includes('app') && !fglContent.includes('www')) {
+            log("FATAL ERROR: 'two-config' requires two targets. Please switch to 'one-config'.", "error");
+            return;
+        }
+
+        log("Compilando via Java Virtual Machine...", "info");
+        
+        setTimeout(() => {
+            const styleMatch = state.files.gm.match(/estilo -personagem "(.*?)"/);
+            const style = styleMatch ? styleMatch[1] : "default";
+            const randomName = state.links[Math.floor(Math.random() * state.links.length)];
+            
+            const finalLink = `https://${style}-adventure.${randomName}.gm.fgl.gss.app`;
+            
+            log(`JOGO PUBLICADO!`, "success");
+            log(`Link: <a href="#" style="color:cyan">${finalLink}</a>`, "success");
+            
+            document.getElementById('game-status').innerHTML = `ONLINE<br><small>${finalLink}</small>`;
+            document.getElementById('game-view').style.background = "linear-gradient(45deg, #004422, #000)";
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>

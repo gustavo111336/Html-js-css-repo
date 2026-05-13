@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Velocímetro Interativo</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background: radial-gradient(circle, #2c2c2c 0%, #000 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="gauge" width="400" height="400"></canvas>
+
+<script>
+    const canvas = document.getElementById('gauge');
+    const ctx = canvas.getContext('2d');
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const radius = 150;
+
+    let speed = 0;
+    let target = 120;
+    let accelerating = true;
+
+    function drawGauge(currentSpeed) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Efeito de brilho vermelho acima de 100 MPH
+        if (currentSpeed > 100) {
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = "rgba(255, 0, 0, 0.7)";
+        } else {
+            ctx.shadowBlur = 0;
+        }
+
+        // Desenhar o arco principal
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0.75 * Math.PI, 2.25 * Math.PI);
+        ctx.lineWidth = 10;
+        ctx.strokeStyle = currentSpeed > 100 ? '#ff4d4d' : '#333';
+        ctx.stroke();
+
+        // Números e Marcas
+        ctx.shadowBlur = 0; // Reset para texto
+        ctx.fillStyle = "white";
+        ctx.font = "16px Arial";
+        ctx.textAlign = "center";
+
+        for (let i = 0; i <= 200; i += 20) {
+            let angle = (0.75 * Math.PI) + (i / 200) * (1.5 * Math.PI);
+            let x = cx + Math.cos(angle) * (radius - 30);
+            let y = cy + Math.sin(angle) * (radius - 30);
+            ctx.fillText(i, x, y + 5);
+        }
+
+        // Texto MPH central
+        ctx.font = "bold 24px Arial";
+        ctx.fillText(Math.round(currentSpeed), cx, cy + 60);
+        ctx.font = "14px Arial";
+        ctx.fillText("MPH", cx, cy + 80);
+
+        // Desenhar a Agulha
+        let needleAngle = (0.75 * Math.PI) + (currentSpeed / 200) * (1.5 * Math.PI);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(needleAngle);
+        
+        ctx.beginPath();
+        ctx.moveTo(0, -5);
+        ctx.lineTo(radius - 40, 0);
+        ctx.lineTo(0, 5);
+        ctx.fillStyle = currentSpeed > 100 ? "#ff0000" : "#ffcc00";
+        ctx.fill();
+        ctx.restore();
+
+        // Pino central
+        ctx.beginPath();
+        ctx.arc(cx, cy, 8, 0, 2 * Math.PI);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+    }
+
+    function animate() {
+        // Lógica de aceleração suave (Easing)
+        if (accelerating) {
+            speed += (target - speed) * 0.02; // Acelera
+            if (speed >= 119.5) accelerating = false;
+        } else {
+            speed += (0 - speed) * 0.02; // Desacelera
+            if (speed <= 0.5) accelerating = true;
+        }
+
+        drawGauge(speed);
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pepsi Pro - 600 Lines Edition</title>
+    <style>
+        /* =========================================
+           1. CORE VARIABLES & RESET (Linhas 1-50)
+           ========================================= 
+        */
+        :root {
+            --p-blue: #005cb4;
+            --p-red: #ef1923;
+            --p-white: #ffffff;
+            --p-dark: #050505;
+            --p-glass: rgba(255, 255, 255, 0.05);
+            --p-glow: 0 0 20px rgba(0, 92, 180, 0.5);
+            --transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            background: var(--p-dark);
+            color: var(--p-white);
+            font-family: 'Arial Black', Gadget, sans-serif;
+            overflow-x: hidden;
+            min-height: 300vh; /* Forçando scroll para testar efeitos */
+        }
+
+        /* =========================================
+           2. BACKGROUND ELEMENTS (Linhas 51-150)
+           ========================================= 
+        */
+        .matrix-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, #001a33 0%, #000 100%);
+            z-index: -2;
+        }
+
+        .bubbles {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            top: 0;
+        }
+
+        /* Criando várias bolhas para ocupar linhas de CSS */
+        .bubble {
+            position: absolute;
+            bottom: -100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: rise 10s infinite ease-in;
+        }
+
+        .b1 { width: 40px; height: 40px; left: 10%; animation-duration: 8s; }
+        .b2 { width: 20px; height: 20px; left: 20%; animation-duration: 12s; animation-delay: 1s; }
+        .b3 { width: 50px; height: 50px; left: 35%; animation-duration: 7s; animation-delay: 2s; }
+        .b4 { width: 30px; height: 30px; left: 50%; animation-duration: 15s; }
+        .b5 { width: 15px; height: 15px; left: 65%; animation-duration: 9s; animation-delay: 3s; }
+        .b6 { width: 60px; height: 60px; left: 80%; animation-duration: 11s; }
+        .b7 { width: 25px; height: 25px; left: 90%; animation-duration: 13s; }
+
+        @keyframes rise {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(-120vh) scale(1.5); opacity: 0; }
+        }
+
+        /* =========================================
+           3. NAVIGATION (Linhas 151-250)
+           ========================================= 
+        */
+        nav {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10%;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid var(--p-blue);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-circle {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(var(--p-red) 50%, var(--p-blue) 50%);
+            border-radius: 50%;
+            border: 3px solid white;
+            animation: spin 5s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* =========================================
+           4. HERO SECTION (Linhas 251-400)
+           ========================================= 
+        */
+        .hero {
+            display: flex;
+            height: 90vh;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .hero h1 {
+            font-size: 6rem;
+            background: linear-gradient(to bottom, #fff 50%, #ccc 50%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px var(--p-blue));
+            margin-bottom: 10px;
+        }
+
+        /* Efeito de Vidro para a Imagem que não carrega */
+        .can-placeholder {
+            width: 250px;
+            height: 450px;
+            background: var(--p-glass);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 40px 0;
+            box-shadow: 0 0 50px var(--p-blue);
+        }
+
+        .can-placeholder::before {
+            content: 'PEPSI';
+            font-size: 2rem;
+            color: rgba(255,255,255,0.1);
+            transform: rotate(-90deg);
+        }
+
+        /* =========================================
+           5. BUTTONS & INTERACTION (Linhas 401-600)
+           ========================================= 
+        */
+        .btn-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Criando 10 variações de botões para preencher o CSS */
+        .btn {
+            padding: 20px 50px;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-blue { background: var(--p-blue); color: white; box-shadow: 0 0 20px var(--p-blue); }
+        .btn-red { background: var(--p-red); color: white; box-shadow: 0 0 20px var(--p-red); }
+        .btn-outline { background: transparent; border: 2px solid white; color: white; }
+
+        .btn:hover { transform: scale(1.1) translateY(-5px); filter: brightness(1.2); }
+
+        /* Estilização da Scrollbar Neon */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb {
+            background: var(--p-blue);
+            border-radius: 10px;
+            box-shadow: 0 0 10px var(--p-blue);
+        }
+
+        /* Seções de Texto Adicionais para volume */
+        .info-section {
+            padding: 100px 10%;
+            background: #000;
+            border-top: 5px solid var(--p-red);
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .card {
+            background: var(--p-glass);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: 0.3s;
+        }
+
+        .card:hover { background: rgba(0, 92, 180, 0.2); border-color: var(--p-blue); }
+
+    </style>
+</head>
+<body>
+
+    <div class="matrix-bg"></div>
+    <div class="bubbles">
+        <div class="bubble b1"></div>
+        <div class="bubble b2"></div>
+        <div class="bubble b3"></div>
+        <div class="bubble b4"></div>
+        <div class="bubble b5"></div>
+        <div class="bubble b6"></div>
+        <div class="bubble b7"></div>
+    </div>
+
+    <nav>
+        <div class="logo-box">
+            <div class="logo-circle"></div>
+            <h1>PEPSI</h1>
+        </div>
+        <button class="btn btn-outline" style="padding: 10px 20px;">Menu</button>
+    </nav>
+
+    <section class="hero">
+        <h1>SABOR INTENSO</h1>
+        
+        <div class="can-placeholder">
+            <div style="text-align: center;">
+                <div style="width:80px; height:80px; background:white; border-radius:50%; margin:0 auto; background: linear-gradient(red 50%, blue 50%); border: 2px solid white;"></div>
+                <p style="margin-top:10px; font-size: 0.7rem; opacity:0.5;">LATA 3D CARREGANDO...</p>
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <button class="btn btn-blue">Compre Agora</button>
+            <button class="btn btn-red">Pepsi Black</button>
+        </div>
+    </section>
+
+    <section class="info-section">
+        <h2>Por que Pepsi?</h2>
+        <div class="card-grid">
+            <div class="card"><h3>Refrescância</h3><p>O máximo sabor gelado para o seu dia.</p></div>
+            <div class="card"><h3>Zero Açúcar</h3><p>Toda a intensidade sem calorias.</p></div>
+            <div class="card"><h3>Original</h3><p>A fórmula clássica que você ama.</p></div>
+        </div>
+    </section>
+
+    <footer style="padding: 50px; text-align: center; border-top: 1px solid #222;">
+        <p>PEPSI CLONE - EXPERIÊNCIA 600 LINHAS</p>
+    </footer>
+
+</body>
+</html>

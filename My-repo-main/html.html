@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <script>
+        document.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    const drop = document.createElement('div');
+    
+    // Estilização rápida via JS
+    drop.style.position = 'fixed';
+    drop.style.left = touch.clientX + 'px';
+    drop.style.top = touch.clientY + 'px';
+    drop.style.width = '20px';
+    drop.style.height = '20px';
+    drop.style.background = '#00d4ff';
+    drop.style.borderRadius = '50%';
+    drop.style.pointerEvents = 'none';
+    drop.style.boxShadow = '0 0 15px #00d4ff';
+    drop.style.zIndex = '9999';
+    
+    document.body.appendChild(drop);
+    
+    // Animação de sumir
+    drop.animate([
+        { transform: 'scale(1)', opacity: 1 },
+        { transform: 'scale(3)', opacity: 0 }
+    ], { duration: 500 });
+    
+    setTimeout(() => drop.remove(), 500);
+});
+         
+    </script>
+    <script>
+    // Cria estrelinhas que seguem o mouse
+    document.addEventListener('mousemove', function(e) {
+        let star = document.createElement('div');
+        star.innerHTML = '⭐';
+        star.style.position = 'fixed';
+        star.style.left = e.clientX + 'px';
+        star.style.top = e.clientY + 'px';
+        star.style.fontSize = '20px';
+        star.style.pointerEvents = 'none'; // Não atrapalha os cliques
+        star.style.transition = 'all 1s linear';
+        
+        document.body.appendChild(star);
+
+        // Animação para sumir e subir
+        setTimeout(() => {
+            star.style.transform = 'translateY(-50px) scale(0)';
+            star.style.opacity = '0';
+        }, 10);
+
+        // Remove do HTML para não travar o PC
+        setTimeout(() => {
+            star.remove();
+        }, 1000);
+    });
+    </script>
+    <script>
+    function createStar(x, y) {
+        const star = document.createElement('div');
+        star.innerHTML = '⭐';
+        star.style.cssText = `
+            position: fixed;
+            left: ${x}px;
+            top: ${y}px;
+            font-size: 20px;
+            pointer-events: none;
+            transition: all 1s linear;
+            z-index: 9999;
+        `;
+        document.body.appendChild(star);
+
+        setTimeout(() => {
+            star.style.transform = 'translateY(-50px) scale(0)';
+            star.style.opacity = '0';
+        }, 10);
+
+        setTimeout(() => star.remove(), 1000);
+    }
+
+    // Mouse
+    document.addEventListener('mousemove', (e) => createStar(e.clientX, e.clientY));
+
+    // Touch (Mobile)
+    document.addEventListener('touchmove', (e) => {
+        const touch = e.touches[0];
+        createStar(touch.clientX, touch.clientY);
+    }, { passive: true });
+    </script>
+    
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site com Super Animações</title>
+    <style>
+        /* 1. Animação de Fundo Gradiente */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            overflow-x: hidden;
+            background: linear-gradient(-45deg, #5c31ad, #8e44ad, #3498db, #2c3e50);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 2. Animação de Entrada do Conteúdo */
+        .container {
+            text-align: center;
+            animation: slideUp 1.2s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 3rem;
+            text-shadow: 3px 3px 10px rgba(0,0,0,0.7);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        h1:hover {
+            transform: scale(1.1) rotate(2deg);
+            color: #f1c40f;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        /* 3. Animação de Flutuação da Imagem */
+        .gato-img {
+            max-width: 300px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 5px solid rgba(255,255,255,0.2);
+            animation: float 3s ease-in-out infinite;
+            transition: filter 0.3s;
+        }
+
+        .gato-img:hover {
+            filter: brightness(1.2) contrast(1.1);
+            cursor: pointer;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* 4. Linha Decorativa Animada */
+        .linha {
+            width: 0;
+            height: 4px;
+            background: #f1c40f;
+            margin: 10px auto;
+            border-radius: 2px;
+            animation: expandirLinha 2s forwards 1s;
+        }
+
+        @keyframes expandirLinha {
+            to { width: 80%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Bem vindo ao meu site</h1>
+            <div class="linha"></div>
+        </header>
+
+        <main>
+            <h2>Meu site interativo</h2>
+            <p>Este é um gato que achei na internet (e ele flutua!)</p>
+            <img src="download.jfif" alt="Gato fofo animado" class="gato-img">
+        </main>
+    </div>
+
+</body>
+</html>
+
+
+

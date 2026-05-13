@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEON OS - ULTIMATE CORE</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0ff;
+            --primary-dim: #008f8f;
+            --secondary: #bd00ff;
+            --secondary-dim: #6a0090;
+            --bg-color: #050505;
+            --panel-bg: rgba(10, 15, 15, 0.95);
+            --text-color: #e0e0e0;
+            --alert: #ff2a2a;
+            --warning: #ffcc00;
+            --success: #00ff41;
+            
+            --scanline-color: rgba(0, 255, 255, 0.05);
+            --crt-flicker: rgba(255, 255, 255, 0.02);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Share Tech Mono', monospace; /* Fonte Hacker */
+            user-select: none; /* Impede seleção de texto para parecer app nativo */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- CAMADA DE FUNDO (CANVAS MATRIX) --- */
+        #matrixCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 0;
+            opacity: 0.25;
+        }
+
+        /* --- EFEITO CRT (TV ANTIGA) --- */
+        .crt-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            z-index: 999;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.9; }
+            50% { opacity: 1.0; }
+            100% { opacity: 0.9; }
+        }
+
+        /* --- JANELA PRINCIPAL --- */
+        .ui-container {
+            z-index: 10;
+            width: 95%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: var(--panel-bg);
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 20px var(--primary-dim), inset 0 0 20px rgba(0, 255, 255, 0.05);
+            padding: 2rem;
+            position: relative;
+            backdrop-filter: blur(10px);
+            border-radius: 4px;
+            
+            /* Clip Path para dar cantos cortados estilo Sci-Fi */
+            clip-path: polygon(
+                0 0, 
+                100% 0, 
+                100% 95%, 
+                95% 100%, 
+                0 100%
+            );
+
+            display: none; /* Inicia oculto */
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.5s ease;
+        }
+
+        .ui-container.active {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* --- TYPOGRAPHY & HEADER --- */
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+            margin-bottom: 5px;
+            letter-spacing: 4px;
+            border-bottom: 2px solid var(--primary-dim);
+            padding-bottom: 15px;
+            position: relative;
+        }
+
+        h1::after {
+            content: "SYS_ROOT_ACCESS";
+            position: absolute;
+            bottom: -18px;
+            right: 0;
+            font-size: 0.6rem;
+            color: var(--primary-dim);
+            background: var(--bg-color);
+            padding: 2px 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--secondary);
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- INPUTS AVANÇADOS --- */
+        .input-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="date"] {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #333;
+            border-left: 4px solid var(--primary-dim);
+            color: #fff;
+            outline: none;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.15);
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        /* Indicador de força de senha */
+        .strength-bar {
+            height: 3px;
+            width: 0%;
+            background: var(--alert);
+            transition: 0.3s;
+            margin-top: 5px;
+        }
+
+        /* --- BOTÕES NEON --- */
+        .btn-neon {
+            width: 100%;
+            padding: 15px;
+            margin-top: 10px;
+            background: rgba(0, 255, 255, 0.05);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+
+        .btn-neon:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 25px var(--primary);
+            font-weight: bold;
+        }
+
+        .btn-neon:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            border-color: var(--secondary);
+            color: var(--secondary);
+            background: rgba(189, 0, 255, 0.05);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary);
+            color: #fff;
+            box-shadow: 0 0 25px var(--secondary);
+        }
+
+        /* --- DASHBOARD MONITOR --- */
+        .monitor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .dash-card {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 60px;
+            background: #000;
+            border: 1px solid #222;
+        }
+
+        /* --- TERMINAL (CLI) --- */
+        .terminal-window {
+            background: #000;
+            border: 1px solid #444;
+            padding: 10px;
+            height: 150px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+            color: var(--success);
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+
+        .terminal-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-top: 1px solid #333;
+            color: var(--success);
+            padding: 10px;
+            font-family: monospace;
+            outline: none;
+        }
+
+        /* --- BOOT SCREEN --- */
+        #bootScreen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: #000;
+            z-index: 1000;
+            padding: 20px;
+            color: var(--primary);
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        
+        .boot-text { margin-bottom: 5px; opacity: 0.8; }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        /* --- NOTIFICATIONS (TOASTS) --- */
+        #toastArea {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: rgba(0, 0, 0, 0.9);
+            border-left: 4px solid var(--primary);
+            color: #fff;
+            padding: 15px 25px;
+            min-width: 250px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease forwards;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .toast.error { border-color: var(--alert); color: var(--alert); }
+        .toast.success { border-color: var(--success); color: var(--success); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* --- UTILITÁRIOS --- */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; margin-top: 15px; font-size: 0.8rem; }
+        a { color: var(--secondary); text-decoration: none; cursor: pointer; }
+        a:hover { text-decoration: underline; text-shadow: 0 0 5px var(--secondary); }
+
+    </style>
+</head>
+<body>
+
+    <div class="crt-overlay"></div>
+    <canvas id="matrixCanvas"></canvas>
+    
+    <div id="toastArea"></div>
+
+    <div id="bootScreen">
+        </div>
+
+    <div id="mainInterface" class="ui-container">
+        
+        <h1>NEON OS <span style="font-size:0.5em; vertical-align:top;">v4.0</span></h1>
+        <div class="subtitle">Secure Quantum Uplink</div>
+
+        <div id="viewRegister">
+            <div class="input-group">
+                <label>USER_ID (Username)</label>
+                <input type="text" id="regUser" placeholder="Create your alias..." autocomplete="off">
+            </div>
+
+            <div class="input-group">
+                <label>ENCRYPTION_KEY (Password)</label>
+                <input type="password" id="regPass" placeholder="Enter secure key...">
+                <div class="strength-bar" id="passStrength"></div>
+            </div>
+
+            <div class="input-group">
+                <label>DIGITAL_MAIL_NODE</label>
+                <input type="email" id="regEmail" placeholder="user@net.com">
+            </div>
+
+            <div class="input-group">
+                <label>ORIGIN_DATE</label>
+                <input type="date" id="regData">
+            </div>
+
+            <button id="btnRegistrar" class="btn-neon">INITIALIZE UPLINK</button>
+            
+            <div class="text-center">
+                ALREADY IN THE MATRIX? <a id="linkToLogin">>> JACK IN</a>
+            </div>
+        </div>
+
+        <div id="viewLogin" class="hidden">
+            <div class="input-group">
+                <label>TARGET_MAIL</label>
+                <input type="email" id="loginEmail" placeholder="Identify yourself...">
+            </div>
+
+            <div class="input-group">
+                <label>ACCESS_CODE</label>
+                <input type="password" id="loginPass" placeholder="Decrypting...">
+            </div>
+
+            <button id="btnLogin" class="btn-neon btn-secondary">EXECUTE LOGIN</button>
+            
+            <div class="text-center">
+                NO GHOST FOUND? <a id="linkToRegister">>> CREATE SHELL</a>
+            </div>
+        </div>
+
+        <div id="viewDashboard" class="hidden">
+            <div style="border-bottom: 1px dashed #333; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between;">
+                <span style="color: var(--success);">● ONLINE</span>
+                <span id="dashClock">00:00:00</span>
+            </div>
+            
+            <div class="monitor-container">
+                <div class="dash-card">
+                    <div style="font-size: 0.7rem; margin-bottom: 5px;">CPU LOAD</div>
+                    <canvas id="cpuChart" class="chart-canvas"></canvas>
+                </div>
+                <div class="dash-card">
+                    <div style="font-size: 0.7rem; margin-bottom: 5px;">MEM ALLOC</div>
+                    <canvas id="memChart" class="chart-canvas"></canvas>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>CURRENT OPERATOR</label>
+                <input type="text" id="dashUser" readonly style="color: var(--success); border-color: var(--success);">
+            </div>
+
+            <div class="input-group">
+                <label>DATABASE NODE ID</label>
+                <input type="text" id="dashId" readonly style="font-size: 0.8rem; color: #888;">
+            </div>
+
+            <label>SYS_TERMINAL_V1</label>
+            <div class="terminal-window" id="terminalOutput">
+                <div>> System mounted successfully.</div>
+                <div>> Waiting for commands... (Type 'help')</div>
+            </div>
+            <input type="text" class="terminal-input" id="terminalInput" placeholder="Enter command..." autocomplete="off">
+
+            <button id="btnLogout" class="btn-neon" style="border-color: var(--alert); color: var(--alert); margin-top: 20px;">
+                TERMINATE SESSION
+            </button>
+        </div>
+
+    </div>
+
+    <script type="module">
+        // ======================================================
+        // 1. CONFIGURAÇÃO FIREBASE
+        // ======================================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDBsGN8z5fyVRKBS0JO4Qi5ntPfxQkviS4",
+            authDomain: "meu-proje-1c988.firebaseapp.com",
+            projectId: "meu-proje-1c988",
+            storageBucket: "meu-proje-1c988.firebasestorage.app",
+            messagingSenderId: "988550699761",
+            appId: "1:988550699761:web:57e5903922291ea714e750",
+            measurementId: "G-LM4FL3Z7WD"
+        };
+
+        let db;
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            console.log(">> FIREBASE: LINK ESTABLISHED");
+        } catch (e) {
+            console.error(e);
+            alert("CRITICAL ERROR: FIREBASE CONFIG FAILED");
+        }
+
+        // ======================================================
+        // 2. AUDIO ENGINE (SINTETIZADOR)
+        // Gera sons via código, sem arquivos .mp3
+        // ======================================================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+
+            if (type === 'type') { // Som de digitação
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+                gainNode.gain.setValueAtTime(0.05, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } 
+            else if (type === 'success') { // Sucesso
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(880, now + 0.1);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+            else if (type === 'error') { // Erro
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+        }
+
+        // Adiciona som aos botões
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => playSound('type'));
+        });
+        document.querySelectorAll('input').forEach(inp => {
+            inp.addEventListener('input', () => {
+                if(Math.random() > 0.5) playSound('type');
+            });
+        });
+
+        // ======================================================
+        // 3. SISTEMA DE TOAST (NOTIFICAÇÕES)
+        // ======================================================
+        function showToast(msg, type = 'info') {
+            const area = document.getElementById('toastArea');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${msg}</span>`;
+            
+            // Som apropriado
+            playSound(type === 'error' ? 'error' : 'success');
+
+            area.appendChild(toast);
+            
+            // Remove após 3s
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ======================================================
+        // 4. MATRIX BACKGROUND
+        // ======================================================
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = '01XYZECHO';
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0F0';
+            ctx.font = fontSize + 'px monospace';
+
+            for(let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+
+        // ======================================================
+        // 5. SISTEMA DE BOOT
+        // ======================================================
+        const bootScreen = document.getElementById('bootScreen');
+        const mainUI = document.getElementById('mainInterface');
+        const bootLines = [
+            "Initializing NEON KERNEL v4.0...",
+            "Loading memory modules... [OK]",
+            "Mounting virtual volumes... [OK]",
+            "Decrypting secure keys...",
+            "Connecting to Firebase Satellite Uplink...",
+            "Connection established (Latency: 12ms)",
+            "Starting Graphical User Interface...",
+            "WELCOME USER."
+        ];
+
+        let lineIdx = 0;
+        function runBoot() {
+            if (lineIdx < bootLines.length) {
+                const div = document.createElement('div');
+                div.className = 'boot-text';
+                div.innerText = "> " + bootLines[lineIdx];
+                bootScreen.appendChild(div);
+                playSound('type');
+                lineIdx++;
+                setTimeout(runBoot, Math.random() * 300 + 100);
+            } else {
+                setTimeout(() => {
+                    bootScreen.style.display = 'none';
+                    mainUI.classList.add('active');
+                    showToast("SYSTEM READY", "success");
+                }, 800);
+            }
+        }
+        // Inicia boot ao carregar
+        window.addEventListener('load', runBoot);
+
+        // ======================================================
+        // 6. NAVEGAÇÃO ENTRE TELAS
+        // ======================================================
+        const views = {
+            reg: document.getElementById('viewRegister'),
+            login: document.getElementById('viewLogin'),
+            dash: document.getElementById('viewDashboard')
+        };
+
+        function switchView(target) {
+            Object.values(views).forEach(v => v.classList.add('hidden'));
+            views[target].classList.remove('hidden');
+        }
+
+        document.getElementById('linkToLogin').onclick = () => switchView('login');
+        document.getElementById('linkToRegister').onclick = () => switchView('reg');
+        document.getElementById('btnLogout').onclick = () => {
+            switchView('login');
+            showToast("Session Terminated", "error");
+        };
+
+        // Força da Senha
+        document.getElementById('regPass').addEventListener('input', (e) => {
+            const val = e.target.value;
+            const bar = document.getElementById('passStrength');
+            let strength = 0;
+            if(val.length > 5) strength += 30;
+            if(val.length > 8) strength += 30;
+            if(/[A-Z]/.test(val)) strength += 20;
+            if(/[0-9]/.test(val)) strength += 20;
+            
+            bar.style.width = strength + '%';
+            bar.style.backgroundColor = strength < 50 ? 'var(--alert)' : 'var(--success)';
+        });
+
+        // ======================================================
+        // 7. LÓGICA DO FIREBASE (CRUD)
+        // ======================================================
+        
+        // --- REGISTRO ---
+        const btnReg = document.getElementById('btnRegistrar');
+        btnReg.addEventListener('click', async () => {
+            const user = document.getElementById('regUser').value;
+            const email = document.getElementById('regEmail').value;
+            const pass = document.getElementById('regPass').value;
+            const date = document.getElementById('regData').value;
+
+            if(!user || !email || !pass) {
+                showToast("Fill all required fields!", "error");
+                return;
+            }
+
+            btnReg.disabled = true;
+            btnReg.innerText = "UPLOADING TO CLOUD...";
+
+            try {
+                const docRef = await addDoc(collection(db, "usuarios"), {
+                    username: user,
+                    email: email,
+                    password: pass,
+                    birthdate: date,
+                    createdAt: new Date().toISOString(),
+                    level: 1,
+                    rank: "Novice"
+                });
+                
+                showToast(`User Created! ID: ${docRef.id.substring(0,6)}...`, "success");
+                document.getElementById('regUser').value = "";
+                document.getElementById('regPass').value = "";
+                
+                setTimeout(() => {
+                    switchView('login');
+                    btnReg.disabled = false;
+                    btnReg.innerText = "INITIALIZE UPLINK";
+                }, 1500);
+
+            } catch (e) {
+                console.error(e);
+                showToast("Database Error: " + e.message, "error");
+                btnReg.disabled = false;
+                btnReg.innerText = "INITIALIZE UPLINK";
+            }
+        });
+
+        // --- LOGIN ---
+        const btnLogin = document.getElementById('btnLogin');
+        btnLogin.addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+
+            if(!email || !pass) return showToast("Credentials missing", "error");
+
+            btnLogin.innerText = "DECRYPTING...";
+            btnLogin.disabled = true;
+
+            try {
+                const q = query(collection(db, "usuarios"), where("email", "==", email));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) throw new Error("User not found");
+
+                let validUser = null;
+                querySnapshot.forEach((doc) => {
+                    if (doc.data().password === pass) {
+                        validUser = { id: doc.id, ...doc.data() };
+                    }
+                });
+
+                if (validUser) {
+                    showToast("ACCESS GRANTED", "success");
+                    loadDashboard(validUser);
+                } else {
+                    showToast("Invalid Password", "error");
+                }
+
+            } catch (e) {
+                showToast(e.message, "error");
+            } finally {
+                btnLogin.innerText = "EXECUTE LOGIN";
+                btnLogin.disabled = false;
+            }
+        });
+
+        // ======================================================
+        // 8. DASHBOARD SYSTEM (GRÁFICOS E TERMINAL)
+        // ======================================================
+        
+        // Relógio
+        setInterval(() => {
+            document.getElementById('dashClock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        function loadDashboard(user) {
+            document.getElementById('dashUser').value = user.username.toUpperCase();
+            document.getElementById('dashId').value = user.id;
+            switchView('dash');
+            startCharts(); // Inicia os gráficos
+        }
+
+        // Gráficos Simulados (CPU/MEM)
+        function startCharts() {
+            const drawChart = (canvasId, color) => {
+                const c = document.getElementById(canvasId);
+                const ctx = c.getContext('2d');
+                const data = Array(20).fill(0);
+                
+                function loop() {
+                    if(document.getElementById('viewDashboard').classList.contains('hidden')) return;
+
+                    data.push(Math.random() * c.height);
+                    data.shift();
+
+                    ctx.clearRect(0,0,c.width, c.height);
+                    ctx.beginPath();
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 2;
+                    
+                    data.forEach((y, x) => {
+                        const xPos = (x / data.length) * c.width;
+                        ctx.lineTo(xPos, c.height - y);
+                    });
+                    ctx.stroke();
+                    requestAnimationFrame(loop);
+                }
+                loop();
+            };
+            
+            drawChart('cpuChart', '#0ff'); // Ciano para CPU
+            drawChart('memChart', '#bd00ff'); // Roxo para RAM
+        }
+
+        // Terminal Interativo
+        const termInput = document.getElementById('terminalInput');
+        const termOut = document.getElementById('terminalOutput');
+
+        termInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const cmd = termInput.value.toLowerCase().trim();
+                printLog(`root@neon:~$ ${cmd}`);
+                
+                // Comandos
+                if (cmd === 'help') {
+                    printLog("AVAILABLE COMMANDS: help, clear, ping, date, status");
+                } else if (cmd === 'clear') {
+                    termOut.innerHTML = "";
+                } else if (cmd === 'ping') {
+                    printLog("Pinging Google Cloud... 14ms response.");
+                } else if (cmd === 'date') {
+                    printLog("Server Time: " + new Date().toISOString());
+                } else if (cmd === 'status') {
+                    printLog("SYSTEM OPTIMAL. FIREBASE CONNECTED.");
+                } else {
+                    printLog(`Command '${cmd}' not found.`, "error");
+                }
+                
+                termInput.value = "";
+                playSound('type');
+            }
+        });
+
+        function printLog(text, type='info') {
+            const div = document.createElement('div');
+            div.innerText = text;
+            if(type === 'error') div.style.color = 'var(--alert)';
+            termOut.appendChild(div);
+            termOut.scrollTop = termOut.scrollHeight;
+        }
+
+        console.log(">> SYSTEM FULLY LOADED.");
+
+    </script>
+</body>
+</html>

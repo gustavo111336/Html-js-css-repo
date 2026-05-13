@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEON OS - ULTIMATE CORE</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0ff;
+            --primary-dim: #008f8f;
+            --secondary: #bd00ff;
+            --secondary-dim: #6a0090;
+            --bg-color: #050505;
+            --panel-bg: rgba(10, 15, 15, 0.95);
+            --text-color: #e0e0e0;
+            --alert: #ff2a2a;
+            --warning: #ffcc00;
+            --success: #00ff41;
+            
+            --scanline-color: rgba(0, 255, 255, 0.05);
+            --crt-flicker: rgba(255, 255, 255, 0.02);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Share Tech Mono', monospace; /* Fonte Hacker */
+            user-select: none; /* Impede seleção de texto para parecer app nativo */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- CAMADA DE FUNDO (CANVAS MATRIX) --- */
+        #matrixCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 0;
+            opacity: 0.25;
+        }
+
+        /* --- EFEITO CRT (TV ANTIGA) --- */
+        .crt-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            z-index: 999;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.9; }
+            50% { opacity: 1.0; }
+            100% { opacity: 0.9; }
+        }
+
+        /* --- JANELA PRINCIPAL --- */
+        .ui-container {
+            z-index: 10;
+            width: 95%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: var(--panel-bg);
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 20px var(--primary-dim), inset 0 0 20px rgba(0, 255, 255, 0.05);
+            padding: 2rem;
+            position: relative;
+            backdrop-filter: blur(10px);
+            border-radius: 4px;
+            
+            /* Clip Path para dar cantos cortados estilo Sci-Fi */
+            clip-path: polygon(
+                0 0, 
+                100% 0, 
+                100% 95%, 
+                95% 100%, 
+                0 100%
+            );
+
+            display: none; /* Inicia oculto */
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.5s ease;
+        }
+
+        .ui-container.active {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* --- TYPOGRAPHY & HEADER --- */
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primar

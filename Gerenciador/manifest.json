@@ -1,0 +1,17 @@
+{
+  "name": "Gerenciador",
+  "short_name": "Gerenciador",
+  "description": "Gerenciador de arquivos Browser storage JURO",
+  "start_url": "./gen.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "196x196",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

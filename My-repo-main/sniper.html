@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <style>
+  /* 1. RESET E VARIÁVEIS (A base do sistema) */
+  :root {
+    --neon-green: #0fa;
+    --neon-pink: #f0f;
+    --neon-blue: #0ff;
+    --bg-dark: #050505;
+    --glass: rgba(255, 255, 255, 0.05);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    cursor: crosshair; /* Cursor de mira futurista */
+  }
+
+  /* 2. BACKGROUND ANIMADO (Efeito Matrix/Space) */
+  body {
+    background-color: var(--bg-dark);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier New', Courier, monospace;
+    overflow-x: hidden;
+    background-image: 
+      radial-gradient(circle at 50% 50%, #111 0%, #000 100%),
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+      linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 100%, 100% 2px, 3px 100%;
+  }
+
+  /* 3. EFEITO DE SCANLINE (Aquelas linhas de TV antiga) */
+  body::before {
+    content: " ";
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    z-index: 100;
+    background-size: 100% 3px, 3px 100%;
+    pointer-events: none;
+  }
+
+  /* 4. TÍTULO GLITCH (Efeito de erro) */
+  h1 {
+    font-size: clamp(3rem, 10vw, 6rem);
+    text-transform: uppercase;
+    position: relative;
+    color: var(--neon-green);
+    text-shadow: 0.05em 0 0 var(--neon-pink), -0.025em -0.05em 0 var(--neon-blue);
+    animation: glitch 1s infinite;
+    margin-bottom: 40px;
+  }
+
+  @keyframes glitch {
+    0% { text-shadow: 2px 0 0 var(--neon-pink), -2px -2px 0 var(--neon-blue); }
+    25% { text-shadow: -2px 0 0 var(--neon-pink), 2px 2px 0 var(--neon-blue); }
+    50% { text-shadow: 2px -2px 0 var(--neon-pink), -2px 0 0 var(--neon-blue); }
+    100% { text-shadow: -2px 2px 0 var(--neon-pink), 2px -2px 0 var(--neon-blue); }
+  }
+
+  /* 5. A CAIXA - AGORA UM NÚCLEO ENERGÉTICO */
+  .caixa {
+    width: 180px;
+    height: 180px;
+    background: var(--glass);
+    border: 2px solid var(--neon-pink);
+    border-radius: 50% 20% 50% 20%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px var(--neon-pink), inset 0 0 20px var(--neon-pink);
+    animation: rotateCore 5s linear infinite, glow 2s ease-in-out infinite alternate;
+  }
+
+  .caixa::after {
+    content: "CORE";
+    font-size: 0.8rem;
+    color: var(--neon-pink);
+    letter-spacing: 5px;
+    animation: pulseText 1s infinite;
+  }
+
+  @keyframes rotateCore {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+
+  @keyframes glow {
+    from { box-shadow: 0 0 10px var(--neon-pink); }
+    to { box-shadow: 0 0 40px var(--neon-pink); }
+  }
+
+  /* 6. LISTA - AGORA UM TERMINAL DE DADOS */
+  ul {
+    list-style: none;
+    margin-top: 50px;
+    width: 90%;
+    max-width: 400px;
+  }
+
+  li {
+    background: rgba(0, 0, 0, 0.6);
+    border-left: 5px solid var(--neon-blue);
+    margin: 15px 0;
+    padding: 20px;
+    font-size: 1.2rem;
+    color: var(--neon-blue);
+    position: relative;
+    clip-path: polygon(0 0, 90% 0, 100% 30%, 100% 100%, 0 100%);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: blur(5px);
+  }
+
+  li:hover, li:active {
+    transform: translateX(15px);
+    background: var(--neon-blue);
+    color: #000;
+    box-shadow: -10px 0 30px var(--neon-blue);
+  }
+
+  li::before {
+    content: "> ";
+    font-weight: bold;
+  }
+
+  /* 7. ELEMENTOS DE DECORAÇÃO (HUD) */
+  .hud-line {
+    position: absolute;
+    width: 2px;
+    height: 100px;
+    background: var(--neon-green);
+    left: 20px;
+    top: 20%;
+    box-shadow: 0 0 10px var(--neon-green);
+  }
+
+  /* 8. ANIMAÇÕES EXTRAS */
+  @keyframes pulseText {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* 9. RESPONSIVIDADE PARA O SEU CELULAR */
+  @media (max-width: 600px) {
+    h1 { font-size: 3rem; }
+    .caixa { width: 120px; height: 120px; }
+    li { padding: 15px; font-size: 1rem; }
+  }
+
+  /* 10. RODAPÉ DE STATUS */
+  body::after {
+    content: "SYSTEM STATUS: OPERATIONAL | ENCRYPTED: YES";
+    position: fixed;
+    bottom: 10px;
+    font-size: 0.6rem;
+    color: var(--neon-green);
+    letter-spacing: 2px;
+    opacity: 0.5;
+  }
+</style>
+
+
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <h1>olk</h1>
+  <div class="caixa"></div>
+  <ul>
+    <li>aqui</li>
+    <li>na vdd é aqui</li>
+    <li>kkkk é aqui</li>
+  </ul>
+</body>
+</html>

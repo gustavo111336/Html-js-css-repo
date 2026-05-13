@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+<link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg">
+  <style>
+/* Isso faz com que o HTML entenda os "Enters" vindos do YAML */
+#app-mount p, .descricao {
+    white-space: pre-wrap;
+}
+/* Container para organizar os cards */
+.container-cards {
+    display: flex;
+    flex-direction: column; /* Um embaixo do outro */
+    gap: 15px;              /* Espaço entre os cards */
+    padding: 20px;
+}
+
+/* O Estilo do Card */
+.card {
+    background: #ffffff;
+    border: 1px solid #e1e4e8;
+    border-radius: 12px;
+    padding: 16px;
+    text-decoration: none;
+    color: #333;
+    display: block;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Efeito ao passar o mouse ou clicar */
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    border-color: #007bff;
+}
+
+.card-content strong {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+    color: #007bff;
+}
+
+.card-content span {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.
+
+</style>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="assets/icons/favicon.ico" />
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" sizes="180x180">
+    <link rel="mask-icon" href="assets/icons/logo.svg">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+    <title>Meta DATA</title>
+    <script type="module" crossorigin src="./resources/index.js"></script>
+    <link rel="stylesheet" crossorigin href="./resources/index-BUSrgv1m.css">
+  <link rel="manifest" href="./assets/manifest.json" crossorigin="use-credentials"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
+  <body>
+    <div id="app-mount"></div>
+  </body>
+</html>
+

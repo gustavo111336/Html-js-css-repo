@@ -1,0 +1,7 @@
+titulo_site: "Meu Dashboard"
+descricao: "Links úteis e repositórios"
+menu:
+  - nome: "Meu Portfólio"
+    link: "https://gustavo111336.github.io/My-repo/"
+  - nome: "GitHub"
+    link: "https://github.com/gustavo111336/"

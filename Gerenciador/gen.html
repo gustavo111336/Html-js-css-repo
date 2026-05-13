@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+    <title>Browser Drive - Gerenciador de Arquivos Local</title>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans h-screen flex overflow-hidden relative">
+
+    <!-- Hidden Input for File Upload -->
+    <input type="file" id="fileInput" class="hidden" multiple>
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex-col hidden md:flex">
+        <div class="p-6">
+            <div class="flex items-center gap-2 text-blue-600 font-bold text-xl mb-8">
+                <i class="fas fa-hdd"></i>
+                <span>BrowserDrive</span>
+            </div>
+            
+            <nav class="space-y-1">
+                <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm font-medium bg-blue-50 text-blue-700 rounded-lg">
+                    <i class="fas fa-folder-open w-5 text-center"></i> Meus Arquivos
+                </a>
+            </nav>
+
+            <div class="mt-10 pt-10 border-t border-gray-100">
+                <div class="px-4">
+                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>Armazenamento Local</span>
+                        <span id="storageUsage">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                        <div id="storageBar" class="bg-blue-600 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-2">Usando IndexedDB</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0 bg-white" id="dropZone">
+        
+        <!-- Header -->
+        <header class="h-16 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+            <div class="flex-1 max-w-xl">
+                <div class="relative group">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all sm:text-sm" placeholder="Pesquisar nos seus arquivos...">
+                </div>
+            </div>
+            
+            <div class="ml-4 flex items-center gap-3">
+                <button id="uploadBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-sm">
+                    <i class="fas fa-plus"></i>
+                    <span class="hidden sm:inline">Upload</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Breadcrumbs -->
+        <div class="px-6 py-4 flex items-center justify-between border-b border-gray-50 bg-gray-50/30">
+            <div class="flex items-center gap-2 text-sm text-gray-500">
+                <span class="hover:text-blue-600 cursor-pointer">Raiz</span>
+                <i class="fas fa-chevron-right text-[10px]"></i>
+                <span class="font-medium text-gray-900">Meus Arquivos</span>
+            </div>
+        </div>
+
+        <!-- File Grid -->
+        <div class="flex-1 overflow-y-auto p-6 relative">
+            <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <!-- Arquivos gerados via JS vão aqui -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="flex flex-col items-center justify-center h-full text-center py-20">
+                <div class="w-24 h-24 bg-blue-50 text-blue-200 rounded-full flex items-center justify-center text-4xl mb-4">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-900">Seu drive está vazio</h2>
+                <p class="text-gray-500 max-w-xs mt-2">Arraste arquivos aqui ou use o botão de upload para começar a salvar no seu navegador.</p>
+            </div>
+        </div>
+
+        <!-- Drop Zone Overlay -->
+        <div id="dropOverlay" class="fixed inset-0 bg-blue-600/10 border-4 border-dashed border-blue-500 z-40 pointer-events-none flex items-center justify-center opacity-0 transition-opacity duration-300">
+            <div class="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center">
+                <i class="fas fa-cloud-upload-alt text-6xl text-blue-500 mb-4 animate-bounce"></i>
+                <p class="text-xl font-bold text-gray-800">Solte para salvar no Browser</p>
+            </div>
+        </div>
+
+        <!-- Footer / Status Bar -->
+        <footer class="h-8 border-t border-gray-200 px-4 flex items-center justify-between text-[10px] text-gray-400 bg-white shrink-0">
+            <div class="flex gap-4">
+                <span id="statusText">Pronto</span>
+                <span id="fileCount">0 Arquivos</span>
+            </div>
+            <div class="flex gap-2 items-center">
+                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                <span>Sincronizado com IndexedDB</span>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Fullscreen File Viewer Modal -->
+    <div id="fullscreenModal" class="fixed inset-0 bg-black/95 z-50 hidden flex-col transition-all duration-300 opacity-0">
+        <header class="flex justify-between items-center p-4 text-white border-b border-gray-800">
+            <h3 id="modalFileName" class="font-medium truncate max-w-xl text-lg">Nome_do_Arquivo.ext</h3>
+            <div class="flex gap-4">
+                <a id="modalDownloadBtn" href="#" download class="text-gray-300 hover:text-white transition-colors p-2">
+                    <i class="fas fa-download text-xl"></i>
+                </a>
+                <button id="closeModalBtn" class="text-gray-300 hover:text-white transition-colors p-2">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+        </header>
+        <div class="flex-1 flex justify-center items-center p-8 overflow-hidden relative" id="modalContentContainer">
+            <!-- Conteúdo do arquivo será injetado aqui -->
+        </div>
+    </div>
+
+    <!-- Script de Lógica -->
+    <script>
+        // Configuração do IndexedDB para salvar os arquivos de verdade
+        const dbName = "BrowserDriveDB";
+        let db;
+
+        const request = indexedDB.open(dbName, 1);
+
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            if (!db.objectStoreNames.contains("files")) {
+                db.createObjectStore("files", { keyPath: "id", autoIncrement: true });
+            }
+        };
+
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            loadFiles();
+        };
+
+        request.onerror = (event) => {
+            console.error("Erro no IndexedDB", event);
+        };
+
+        // Referências do DOM
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileGrid = document.getElementById('fileGrid');
+        const emptyState = document.getElementById('emptyState');
+        const fileCount = document.getElementById('fileCount');
+        const dropOverlay = document.getElementById('dropOverlay');
+        const dropZone = document.getElementById('dropZone');
+        
+        // Modal Referências
+        const modal = document.getElementById('fullscreenModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const modalFileName = document.getElementById('modalFileName');
+        const modalContentContainer = document.getElementById('modalContentContainer');
+        const modalDownloadBtn = document.getElementById('modalDownloadBtn');
+
+        // Formatar tamanho do arquivo
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // Determinar ícone baseado no tipo de arquivo
+        function getFileIcon(type) {
+            if (type.includes('image')) return { icon: 'fa-image', color: 'text-blue-500' };
+            if (type.includes('pdf')) return { icon: 'fa-file-pdf', color: 'text-red-500' };
+            if (type.includes('spreadsheet') || type.includes('excel') || type.includes('csv')) return { icon: 'fa-file-excel', color: 'text-green-600' };
+            if (type.includes('word') || type.includes('document')) return { icon: 'fa-file-word', color: 'text-blue-700' };
+            if (type.includes('video')) return { icon: 'fa-file-video', color: 'text-purple-500' };
+            if (type.includes('audio')) return { icon: 'fa-file-audio', color: 'text-yellow-500' };
+            if (type.includes('text') || type.includes('json') || type.includes('javascript')) return { icon: 'fa-file-code', color: 'text-gray-600' };
+            return { icon: 'fa-file', color: 'text-gray-400' };
+        }
+
+        // Salvar arquivo no IndexedDB
+        function saveFile(file) {
+            const transaction = db.transaction(["files"], "readwrite");
+            const store = transaction.objectStore("files");
+            
+            const fileData = {
+                name: file.name,
+                type: file.type || 'unknown',
+                size: file.size,
+                date: new Date().getTime(),
+                blob: file
+            };
+
+            const request = store.add(fileData);
+            request.onsuccess = () => {
+                loadFiles();
+            };
+        }
+
+        // Carregar arquivos do IndexedDB
+        function loadFiles() {
+            const transaction = db.transaction(["files"], "readonly");
+            const store = transaction.objectStore("files");
+            const request = store.getAll();
+
+            request.onsuccess = (event) => {
+                const files = event.target.result;
+                renderFiles(files);
+            };
+        }
+
+        // Renderizar os arquivos na tela
+        function renderFiles(files) {
+            fileGrid.innerHTML = '';
+            fileCount.innerText = `${files.length} Arquivos`;
+
+            if (files.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+                
+                files.forEach(file => {
+                    const fileObjURL = URL.createObjectURL(file.blob);
+                    const isImage = file.type.includes('image');
+                    const { icon, color } = getFileIcon(file.type);
+                    const dateStr = new Date(file.date).toLocaleDateString('pt-BR');
+
+                    const fileCard = document.createElement('div');
+                    
+                    if (isImage) {
+                        fileCard.className = "group border border-gray-100 rounded-xl p-0 bg-white hover:shadow-md hover:border-blue-200 transition-all cursor-pointer overflow-hidden flex flex-col";
+                        fileCard.innerHTML = `
+                            <div class="h-32 bg-gray-100 relative overflow-hidden flex-shrink-0">
+                                <img src="${fileObjURL}" class="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-500" alt="${file.name}">
+                                <div class="absolute top-2 right-2 flex gap-1">
+                                    <button class="delete-btn bg-white/80 w-8 h-8 rounded-full text-red-500 drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white flex items-center justify-center">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="p-3 flex-1">
+                                <h3 class="font-medium text-gray-800 truncate text-sm mb-1">${file.name}</h3>
+                                <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Imagem • ${formatBytes(file.size)}</p>
+                            </div>
+                        `;
+                    } else {
+                        fileCard.className = "group border border-gray-100 rounded-xl p-4 bg-white hover:shadow-md hover:border-blue-200 transition-all cursor-pointer relative flex flex-col justify-between h-full";
+                        fileCard.innerHTML = `
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="${color} text-4xl">
+                                        <i class="fas ${icon}"></i>
+                                    </div>
+                                    <button class="delete-btn text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                                <h3 class="font-medium text-gray-800 truncate mb-1" title="${file.name}">${file.name}</h3>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-2">${formatBytes(file.size)} • ${dateStr}</p>
+                        `;
+                    }
+
+                    // Ação de Clique (Abrir Tela Cheia)
+                    fileCard.addEventListener('click', (e) => {
+                        // Evita abrir modal se clicou no botão de deletar
+                        if(e.target.closest('.delete-btn')) return; 
+                        openModal(file, fileObjURL);
+                    });
+
+                    // Ação de Deletar
+                    const delBtn = fileCard.querySelector('.delete-btn');
+                    delBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteFile(file.id);
+                    });
+
+                    fileGrid.appendChild(fileCard);
+                });
+            }
+        }
+
+        // Deletar arquivo
+        function deleteFile(id) {
+            const transaction = db.transaction(["files"], "readwrite");
+            const store = transaction.objectStore("files");
+            store.delete(id);
+            transaction.oncomplete = () => loadFiles();
+        }
+
+        // Lógica do Modal (Tela Cheia)
+        function openModal(file, objectURL) {
+            modalFileName.textContent = file.name;
+            modalDownloadBtn.href = objectURL;
+            modalDownloadBtn.download = file.name;
+            modalContentContainer.innerHTML = '';
+
+            if (file.type.includes('image')) {
+                const img = document.createElement('img');
+                img.src = objectURL;
+                img.className = "max-w-full max-h-full object-contain rounded-lg shadow-2xl drop-shadow-2xl";
+                modalContentContainer.appendChild(img);
+            } else if (file.type === 'application/pdf' || file.type.includes('text') || file.type.includes('json')) {
+                const iframe = document.createElement('iframe');
+                iframe.src = objectURL;
+                iframe.className = "w-full h-full bg-white rounded-lg shadow-2xl";
+                modalContentContainer.appendChild(iframe);
+            } else if (file.type.includes('video')) {
+                const video = document.createElement('video');
+                video.src = objectURL;
+                video.controls = true;
+                video.className = "max-w-full max-h-full rounded-lg shadow-2xl";
+                modalContentContainer.appendChild(video);
+            } else {
+                modalContentContainer.innerHTML = `
+                    <div class="text-center text-white">
+                        <i class="fas fa-file-alt text-7xl mb-4 text-gray-400"></i>
+                        <h2 class="text-2xl font-bold mb-2">Sem visualização disponível</h2>
+                        <p class="text-gray-400 mb-6">Este tipo de arquivo não pode ser visualizado diretamente no navegador.</p>
+                        <a href="${objectURL}" download="${file.name}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2">
+                            <i class="fas fa-download"></i> Baixar Arquivo
+                        </a>
+                    </div>
+                `;
+            }
+
+            modal.classList.remove('hidden');
+            // Timeout pequeno para fazer a animação de fade-in
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        closeModalBtn.addEventListener('click', () => {
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modalContentContainer.innerHTML = ''; // limpa iframe/imgs
+            }, 300);
+        });
+
+        // Lógica de Upload via Botão
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            Array.from(e.target.files).forEach(file => saveFile(file));
+            fileInput.value = ''; // Limpa input
+        });
+
+        // Lógica de Drag & Drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            document.body.addEventListener(eventName, () => {
+                dropOverlay.classList.remove('opacity-0');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            document.body.addEventListener(eventName, (e) => {
+                if (e.target === dropOverlay || eventName === 'drop') {
+                    dropOverlay.classList.add('opacity-0');
+                }
+            }, false);
+        });
+
+        document.body.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            Array.from(files).forEach(file => saveFile(file));
+        }, false);
+    </script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('PWA ATIVADO JURO VEY'))
+      .catch((err) => console.log('DEU RUIM ;-; ', err));
+  }
+</script>
+</body>
+</html>

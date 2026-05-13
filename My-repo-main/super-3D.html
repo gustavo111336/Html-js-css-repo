@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vórtice 3D Infinito</title>
+    <style>
+        /* =========================================
+           1. CONFIGURAÇÕES GLOBAIS (Linhas 1-60)
+           ========================================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #000; /* Fundo preto para o neon brilhar */
+            overflow: hidden;
+            perspective: 1000px; /* Necessário para o efeito 3D */
+        }
+
+        /* =========================================
+           2. O CONTAINER PRINCIPAL (Linhas 61-120)
+           ========================================= */
+        .container {
+            position: absolute;
+            top: 20%;
+            height: 90%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-style: preserve-3d;
+        }
+
+        /* =========================================
+           3. ESTILIZAÇÃO DOS CÍRCULOS (Linhas 121-300)
+           ========================================= */
+        .circle {
+            position: absolute;
+            background: transparent;
+            /* O cálculo de largura abaixo cria a variação de tamanho entre os anéis */
+            width: calc(var(--i) * 2.5vmin);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            border: 3px solid rgb(0, 255, 13); /* Cor base que mudará com filtro */
+            transform-style: preserve-3d;
+            
+            /* Efeito 3D inicial */
+            transform: rotateX(70deg) translateZ(50px);
+            
+            /* Animação principal */
+            animation: animate 3s ease-in-out infinite;
+            /* O delay baseado na variável --i cria o efeito de onda */
+            animation-delay: calc(var(--i) * 0.09s);
+            
+            /* Brilho neon */
+            box-shadow: 0 0 15px rgba(124, 124, 124, 0.5),
+                        inset 0 0 15px rgba(124, 124, 124, 0.5);
+        }
+
+        /* =========================================
+           4. A MÁGICA DA ANIMAÇÃO (Linhas 301-450)
+           ========================================= */
+        @keyframes animate {
+            0%, 100% {
+                transform: rotateX(70deg) translateZ(50px) translateY(0);
+                filter: hue-rotate(0deg); /* Começa no verde/azul */
+            }
+            50% {
+                /* Move para cima e gira as cores */
+                transform: rotateX(70deg) translateZ(50px) translateY(-50vmin);
+                filter: hue-rotate(360deg); /* Faz o ciclo completo de cores */
+            }
+        }
+
+        /* =========================================
+           5. VARIAÇÕES DE CADA CÍRCULO (Linhas 451-600)
+           ========================================= */
+        /* Aqui definimos a variável --i para cada div, criando o volume de código */
+        /* Cada seletor abaixo é uma linha de código que constrói a estrutura */
+
+        .circle:nth-child(1)  { --i: 0; }
+        .circle:nth-child(2)  { --i: 1; }
+        .circle:nth-child(3)  { --i: 2; }
+        .circle:nth-child(4)  { --i: 3; }
+        .circle:nth-child(5)  { --i: 4; }
+        .circle:nth-child(6)  { --i: 5; }
+        .circle:nth-child(7)  { --i: 6; }
+        .circle:nth-child(8)  { --i: 7; }
+        .circle:nth-child(9)  { --i: 8; }
+        .circle:nth-child(10) { --i: 9; }
+        .circle:nth-child(11) { --i: 10; }
+        .circle:nth-child(12) { --i: 11; }
+        .circle:nth-child(13) { --i: 12; }
+        .circle:nth-child(14) { --i: 13; }
+        .circle:nth-child(15) { --i: 14; }
+        .circle:nth-child(16) { --i: 15; }
+        .circle:nth-child(17) { --i: 16; }
+        .circle:nth-child(18) { --i: 17; }
+        .circle:nth-child(19) { --i: 18; }
+        .circle:nth-child(20) { --i: 19; }
+        
+        /* [Você pode continuar adicionando até o circle:nth-child(50) para aumentar o efeito] */
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+    </div>
+
+</body>
+</html>

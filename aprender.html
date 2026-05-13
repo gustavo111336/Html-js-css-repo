@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<head>
+  <style>
+    body {
+      background-color:#000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .neontext{
+      font-size: 60px;
+      color: #fff;
+      text-align: center;
+      font-family: "Arial"; sans-serif:
+      text-transform: uppercase;
+      animation: neon 1s ease-in-out
+      infinite alternate;
+    }
+    
+    @keyframes neon {
+      0%{
+        text-shadow: 0 0 5px:#fff, 0 0 15px #ff0;
+      }
+      100%{
+        text-shadow: 0 0 5px #fff; 0 0 10px #fff, 0 0 20px #0ff,
+        0 0 30px #0ff, 0 0 50px #0ff , 0 0 60px #0ff,
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="neontext">Test</div>
+</body>
+<html>
