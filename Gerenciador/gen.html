@@ -2,138 +2,157 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-<link rel="manifest" href="manifest.json">
-    <title>Browser Drive - Gerenciador de Arquivos Local</title>
+    <link rel="manifest" href="manifest.json">
+    <title>browser drive</title>
+    <style>
+        /* esconde a scrollbar mas permite scroll */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .no-tap-highlight { -webkit-tap-highlight-color: transparent; }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans h-screen flex overflow-hidden relative">
+<body class="bg-gray-50 text-gray-800 font-sans h-[100dvh] flex overflow-hidden relative select-none">
 
-    <!-- Hidden Input for File Upload -->
     <input type="file" id="fileInput" class="hidden" multiple>
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white border-r border-gray-200 flex-col hidden md:flex">
+    <aside class="w-64 bg-white border-r border-gray-200 flex-col hidden md:flex z-10 shadow-sm">
         <div class="p-6">
-            <div class="flex items-center gap-2 text-blue-600 font-bold text-xl mb-8">
-                <i class="fas fa-hdd"></i>
-                <span>BrowserDrive</span>
+            <div class="flex items-center gap-3 text-blue-600 font-bold text-2xl mb-8 tracking-tight">
+                <i class="fas fa-cloud-meatball text-3xl"></i>
+                <span>browser drive</span>
             </div>
             
-            <nav class="space-y-1">
-                <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm font-medium bg-blue-50 text-blue-700 rounded-lg">
-                    <i class="fas fa-folder-open w-5 text-center"></i> Meus Arquivos
+            <nav class="space-y-2">
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold bg-blue-50 text-blue-700 rounded-xl transition-colors">
+                    <i class="fas fa-folder-open w-5 text-center text-lg"></i> meus arquivos
                 </a>
             </nav>
 
-            <div class="mt-10 pt-10 border-t border-gray-100">
-                <div class="px-4">
-                    <div class="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>Armazenamento Local</span>
+            <div class="mt-12 pt-8 border-t border-gray-100">
+                <div class="px-2">
+                    <div class="flex justify-between text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">
+                        <span>armazenamento local</span>
                         <span id="storageUsage">0%</span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-1.5">
-                        <div id="storageBar" class="bg-blue-600 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden shadow-inner">
+                        <div id="storageBar" class="bg-blue-600 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
                     </div>
-                    <p class="text-[10px] text-gray-400 mt-2">Usando IndexedDB</p>
+                    <p class="text-[10px] text-gray-400 mt-3 flex items-center gap-1 font-medium">
+                        <i class="fas fa-database"></i> usando indexeddb
+                    </p>
                 </div>
             </div>
         </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-w-0 bg-white" id="dropZone">
+    <main class="flex-1 flex flex-col min-w-0 bg-gray-50/50" id="dropZone">
         
-        <!-- Header -->
-        <header class="h-16 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
-            <div class="flex-1 max-w-xl">
-                <div class="relative group">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shrink-0 shadow-sm z-10">
+            <div class="flex items-center gap-3 md:hidden text-blue-600 font-bold text-lg">
+                <i class="fas fa-cloud-meatball"></i>
+                <span>drive</span>
+            </div>
+
+            <div class="flex-1 max-w-xl mx-auto md:mx-0">
+                <div class="relative group hidden md:block">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
                         <i class="fas fa-search"></i>
                     </span>
-                    <input type="text" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all sm:text-sm" placeholder="Pesquisar nos seus arquivos...">
+                    <input type="text" class="block w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner" placeholder="pesquisar arquivos...">
                 </div>
             </div>
             
             <div class="ml-4 flex items-center gap-3">
-                <button id="uploadBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-sm">
+                <button id="uploadBtn" class="hidden md:flex bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold items-center gap-2 transition-all shadow-md hover:shadow-lg active:scale-95">
                     <i class="fas fa-plus"></i>
-                    <span class="hidden sm:inline">Upload</span>
+                    <span>upload</span>
                 </button>
             </div>
         </header>
 
-        <!-- Breadcrumbs -->
-        <div class="px-6 py-4 flex items-center justify-between border-b border-gray-50 bg-gray-50/30">
-            <div class="flex items-center gap-2 text-sm text-gray-500">
-                <span class="hover:text-blue-600 cursor-pointer">Raiz</span>
-                <i class="fas fa-chevron-right text-[10px]"></i>
-                <span class="font-medium text-gray-900">Meus Arquivos</span>
+        <div class="px-4 md:px-6 py-3 flex items-center justify-between bg-white/50 backdrop-blur-sm border-b border-gray-100">
+            <div class="flex items-center gap-2 text-sm text-gray-500 font-medium">
+                <span class="hover:text-blue-600 cursor-pointer transition-colors">raiz</span>
+                <i class="fas fa-chevron-right text-[10px] opacity-60"></i>
+                <span class="text-gray-900 font-bold">meus arquivos</span>
             </div>
         </div>
 
-        <!-- File Grid -->
-        <div class="flex-1 overflow-y-auto p-6 relative">
-            <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                <!-- Arquivos gerados via JS vão aqui -->
-            </div>
-
-            <!-- Empty State -->
-            <div id="emptyState" class="flex flex-col items-center justify-center h-full text-center py-20">
-                <div class="w-24 h-24 bg-blue-50 text-blue-200 rounded-full flex items-center justify-center text-4xl mb-4">
-                    <i class="fas fa-cloud-upload-alt"></i>
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 relative pb-24 md:pb-6">
+            <div id="fileGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
                 </div>
-                <h2 class="text-xl font-semibold text-gray-900">Seu drive está vazio</h2>
-                <p class="text-gray-500 max-w-xs mt-2">Arraste arquivos aqui ou use o botão de upload para começar a salvar no seu navegador.</p>
+
+            <div id="emptyState" class="flex flex-col items-center justify-center h-full text-center py-10 md:py-20 hidden">
+                <div class="w-20 h-20 md:w-24 md:h-24 bg-blue-50 text-blue-400 rounded-full flex items-center justify-center text-3xl md:text-4xl mb-4 md:mb-6 shadow-inner">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <h2 class="text-lg md:text-xl font-bold text-gray-800">seu drive está vazio</h2>
+                <p class="text-sm text-gray-500 max-w-xs mt-2">adicione arquivos para começar a salvar no seu navegador localmente</p>
             </div>
         </div>
 
-        <!-- Drop Zone Overlay -->
-        <div id="dropOverlay" class="fixed inset-0 bg-blue-600/10 border-4 border-dashed border-blue-500 z-40 pointer-events-none flex items-center justify-center opacity-0 transition-opacity duration-300">
-            <div class="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center">
-                <i class="fas fa-cloud-upload-alt text-6xl text-blue-500 mb-4 animate-bounce"></i>
-                <p class="text-xl font-bold text-gray-800">Solte para salvar no Browser</p>
-            </div>
-        </div>
-
-        <!-- Footer / Status Bar -->
-        <footer class="h-8 border-t border-gray-200 px-4 flex items-center justify-between text-[10px] text-gray-400 bg-white shrink-0">
+        <footer class="hidden md:flex h-8 border-t border-gray-200 px-4 items-center justify-between text-[11px] text-gray-500 bg-white shrink-0 font-medium tracking-wide">
             <div class="flex gap-4">
-                <span id="statusText">Pronto</span>
-                <span id="fileCount">0 Arquivos</span>
+                <span id="statusText">pronto</span>
+                <span id="fileCount">0 arquivos</span>
             </div>
             <div class="flex gap-2 items-center">
-                <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                <span>Sincronizado com IndexedDB</span>
+                <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div>
+                <span>sincronizado</span>
             </div>
         </footer>
     </main>
 
-    <!-- Fullscreen File Viewer Modal -->
-    <div id="fullscreenModal" class="fixed inset-0 bg-black/95 z-50 hidden flex-col transition-all duration-300 opacity-0">
-        <header class="flex justify-between items-center p-4 text-white border-b border-gray-800">
-            <h3 id="modalFileName" class="font-medium truncate max-w-xl text-lg">Nome_do_Arquivo.ext</h3>
-            <div class="flex gap-4">
-                <a id="modalDownloadBtn" href="#" download class="text-gray-300 hover:text-white transition-colors p-2">
-                    <i class="fas fa-download text-xl"></i>
-                </a>
-                <button id="closeModalBtn" class="text-gray-300 hover:text-white transition-colors p-2">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-        </header>
-        <div class="flex-1 flex justify-center items-center p-8 overflow-hidden relative" id="modalContentContainer">
-            <!-- Conteúdo do arquivo será injetado aqui -->
+    <button id="fabUploadBtn" class="md:hidden fixed bottom-20 right-4 bg-blue-600 text-white w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-[0_8px_16px_rgba(37,99,235,0.3)] z-40 active:scale-90 transition-transform no-tap-highlight">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <nav class="md:hidden fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around items-center h-16 z-30 px-2 pb-safe">
+        <button class="flex flex-col items-center justify-center w-full h-full text-blue-600 no-tap-highlight">
+            <i class="fas fa-folder text-xl mb-1"></i>
+            <span class="text-[10px] font-bold">arquivos</span>
+        </button>
+        <button class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 no-tap-highlight">
+            <i class="fas fa-search text-xl mb-1"></i>
+            <span class="text-[10px] font-bold">buscar</span>
+        </button>
+        <button class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 no-tap-highlight">
+            <i class="fas fa-cog text-xl mb-1"></i>
+            <span class="text-[10px] font-bold">config</span>
+        </button>
+    </nav>
+
+    <div id="dropOverlay" class="fixed inset-0 bg-blue-600/10 border-[6px] border-dashed border-blue-500 z-50 pointer-events-none flex items-center justify-center opacity-0 transition-opacity duration-300 backdrop-blur-sm">
+        <div class="bg-white p-10 rounded-3xl shadow-2xl flex flex-col items-center transform scale-110">
+            <i class="fas fa-cloud-upload-alt text-7xl text-blue-500 mb-6 animate-bounce drop-shadow-md"></i>
+            <p class="text-2xl font-black text-gray-800 tracking-tight">solte para salvar</p>
         </div>
     </div>
 
-    <!-- Script de Lógica -->
+    <div id="fullscreenModal" class="fixed inset-0 bg-black/98 z-[60] hidden flex-col transition-all duration-300 opacity-0 backdrop-blur-md">
+        <header class="flex justify-between items-center p-4 text-white border-b border-white/10 bg-black/50">
+            <h3 id="modalFileName" class="font-semibold truncate max-w-[70%] text-base md:text-lg">arquivo.ext</h3>
+            <div class="flex gap-2 md:gap-4">
+                <a id="modalDownloadBtn" href="#" download class="text-gray-300 hover:text-white transition-colors p-3 bg-white/5 rounded-full active:scale-95">
+                    <i class="fas fa-download text-lg"></i>
+                </a>
+                <button id="closeModalBtn" class="text-gray-300 hover:text-red-400 transition-colors p-3 bg-white/5 rounded-full active:scale-95">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </header>
+        <div class="flex-1 flex justify-center items-center p-4 md:p-8 overflow-hidden relative" id="modalContentContainer">
+        </div>
+    </div>
+
     <script>
-        // Configuração do IndexedDB para salvar os arquivos de verdade
         const dbName = "BrowserDriveDB";
         let db;
-
         const request = indexedDB.open(dbName, 1);
 
         request.onupgradeneeded = (event) => {
@@ -148,83 +167,67 @@
             loadFiles();
         };
 
-        request.onerror = (event) => {
-            console.error("Erro no IndexedDB", event);
-        };
+        request.onerror = (event) => console.error("erro no db", event);
 
-        // Referências do DOM
         const fileInput = document.getElementById('fileInput');
         const uploadBtn = document.getElementById('uploadBtn');
+        const fabUploadBtn = document.getElementById('fabUploadBtn');
         const fileGrid = document.getElementById('fileGrid');
         const emptyState = document.getElementById('emptyState');
         const fileCount = document.getElementById('fileCount');
         const dropOverlay = document.getElementById('dropOverlay');
-        const dropZone = document.getElementById('dropZone');
-        
-        // Modal Referências
         const modal = document.getElementById('fullscreenModal');
         const closeModalBtn = document.getElementById('closeModalBtn');
         const modalFileName = document.getElementById('modalFileName');
         const modalContentContainer = document.getElementById('modalContentContainer');
         const modalDownloadBtn = document.getElementById('modalDownloadBtn');
 
-        // Formatar tamanho do arquivo
-        function formatBytes(bytes, decimals = 2) {
-            if (bytes === 0) return '0 Bytes';
+        function formatBytes(bytes, decimals = 1) {
+            if (bytes === 0) return '0 b';
             const k = 1024;
             const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const sizes = ['b', 'kb', 'mb', 'gb'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
         }
 
-        // Determinar ícone baseado no tipo de arquivo
         function getFileIcon(type) {
-            if (type.includes('image')) return { icon: 'fa-image', color: 'text-blue-500' };
-            if (type.includes('pdf')) return { icon: 'fa-file-pdf', color: 'text-red-500' };
-            if (type.includes('spreadsheet') || type.includes('excel') || type.includes('csv')) return { icon: 'fa-file-excel', color: 'text-green-600' };
-            if (type.includes('word') || type.includes('document')) return { icon: 'fa-file-word', color: 'text-blue-700' };
-            if (type.includes('video')) return { icon: 'fa-file-video', color: 'text-purple-500' };
-            if (type.includes('audio')) return { icon: 'fa-file-audio', color: 'text-yellow-500' };
-            if (type.includes('text') || type.includes('json') || type.includes('javascript')) return { icon: 'fa-file-code', color: 'text-gray-600' };
-            return { icon: 'fa-file', color: 'text-gray-400' };
+            if (type.includes('image')) return { icon: 'fa-image', color: 'text-blue-500', bg: 'bg-blue-50' };
+            if (type.includes('pdf')) return { icon: 'fa-file-pdf', color: 'text-red-500', bg: 'bg-red-50' };
+            if (type.includes('spreadsheet') || type.includes('excel') || type.includes('csv')) return { icon: 'fa-file-excel', color: 'text-green-500', bg: 'bg-green-50' };
+            if (type.includes('word') || type.includes('document')) return { icon: 'fa-file-word', color: 'text-blue-700', bg: 'bg-blue-50' };
+            if (type.includes('video')) return { icon: 'fa-play-circle', color: 'text-purple-500', bg: 'bg-purple-50' };
+            if (type.includes('audio')) return { icon: 'fa-music', color: 'text-yellow-500', bg: 'bg-yellow-50' };
+            if (type.includes('text') || type.includes('json') || type.includes('javascript') || type.includes('html')) return { icon: 'fa-file-code', color: 'text-gray-700', bg: 'bg-gray-100' };
+            return { icon: 'fa-file', color: 'text-gray-400', bg: 'bg-gray-50' };
         }
 
-        // Salvar arquivo no IndexedDB
         function saveFile(file) {
             const transaction = db.transaction(["files"], "readwrite");
             const store = transaction.objectStore("files");
-            
-            const fileData = {
+            const request = store.add({
                 name: file.name,
                 type: file.type || 'unknown',
                 size: file.size,
                 date: new Date().getTime(),
                 blob: file
-            };
-
-            const request = store.add(fileData);
-            request.onsuccess = () => {
-                loadFiles();
-            };
+            });
+            request.onsuccess = () => loadFiles();
         }
 
-        // Carregar arquivos do IndexedDB
         function loadFiles() {
             const transaction = db.transaction(["files"], "readonly");
             const store = transaction.objectStore("files");
             const request = store.getAll();
 
             request.onsuccess = (event) => {
-                const files = event.target.result;
-                renderFiles(files);
+                renderFiles(event.target.result);
             };
         }
 
-        // Renderizar os arquivos na tela
         function renderFiles(files) {
             fileGrid.innerHTML = '';
-            fileCount.innerText = `${files.length} Arquivos`;
+            fileCount.innerText = `${files.length} arquivos`;
 
             if (files.length === 0) {
                 emptyState.classList.remove('hidden');
@@ -236,55 +239,48 @@
                 files.forEach(file => {
                     const fileObjURL = URL.createObjectURL(file.blob);
                     const isImage = file.type.includes('image');
-                    const { icon, color } = getFileIcon(file.type);
-                    const dateStr = new Date(file.date).toLocaleDateString('pt-BR');
-
+                    const { icon, color, bg } = getFileIcon(file.type);
+                    
                     const fileCard = document.createElement('div');
+                    fileCard.className = "group bg-white border border-gray-100/80 rounded-2xl p-0 hover:shadow-xl hover:border-blue-300 hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col active:scale-95 shadow-sm";
                     
                     if (isImage) {
-                        fileCard.className = "group border border-gray-100 rounded-xl p-0 bg-white hover:shadow-md hover:border-blue-200 transition-all cursor-pointer overflow-hidden flex flex-col";
                         fileCard.innerHTML = `
-                            <div class="h-32 bg-gray-100 relative overflow-hidden flex-shrink-0">
-                                <img src="${fileObjURL}" class="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-500" alt="${file.name}">
-                                <div class="absolute top-2 right-2 flex gap-1">
-                                    <button class="delete-btn bg-white/80 w-8 h-8 rounded-full text-red-500 drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white flex items-center justify-center">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
+                            <div class="h-28 md:h-36 bg-gray-50 relative overflow-hidden flex-shrink-0 w-full">
+                                <img src="${fileObjURL}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" alt="img">
+                                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                                <button class="delete-btn absolute top-2 right-2 bg-white/90 backdrop-blur-sm w-8 h-8 rounded-full text-red-500 shadow-md md:opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-50 hover:text-red-600 z-10">
+                                    <i class="fas fa-trash-alt text-sm"></i>
+                                </button>
                             </div>
-                            <div class="p-3 flex-1">
-                                <h3 class="font-medium text-gray-800 truncate text-sm mb-1">${file.name}</h3>
-                                <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Imagem • ${formatBytes(file.size)}</p>
+                            <div class="p-3 md:p-4 flex-1 bg-white relative z-20">
+                                <h3 class="font-bold text-gray-800 truncate text-[13px] md:text-sm mb-0.5 leading-tight">${file.name}</h3>
+                                <p class="text-[10px] md:text-xs text-gray-400 font-semibold tracking-wide">${formatBytes(file.size)}</p>
                             </div>
                         `;
                     } else {
-                        fileCard.className = "group border border-gray-100 rounded-xl p-4 bg-white hover:shadow-md hover:border-blue-200 transition-all cursor-pointer relative flex flex-col justify-between h-full";
                         fileCard.innerHTML = `
-                            <div>
-                                <div class="flex justify-between items-start mb-4">
-                                    <div class="${color} text-4xl">
-                                        <i class="fas ${icon}"></i>
-                                    </div>
-                                    <button class="delete-btn text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
+                            <div class="p-3 md:p-4 flex-1 flex flex-col h-full relative">
+                                <button class="delete-btn absolute top-3 right-3 text-gray-300 hover:text-red-500 md:opacity-0 group-hover:opacity-100 transition-all p-1.5 hover:bg-red-50 rounded-lg z-10">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                <div class="w-12 h-12 md:w-14 md:h-14 ${bg} rounded-2xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-500 ease-out">
+                                    <i class="fas ${icon} ${color} text-2xl md:text-3xl drop-shadow-sm"></i>
                                 </div>
-                                <h3 class="font-medium text-gray-800 truncate mb-1" title="${file.name}">${file.name}</h3>
+                                <div class="mt-auto">
+                                    <h3 class="font-bold text-gray-800 truncate text-[13px] md:text-sm mb-0.5 leading-tight" title="${file.name}">${file.name}</h3>
+                                    <p class="text-[10px] md:text-xs text-gray-400 font-semibold tracking-wide">${formatBytes(file.size)}</p>
+                                </div>
                             </div>
-                            <p class="text-xs text-gray-400 mt-2">${formatBytes(file.size)} • ${dateStr}</p>
                         `;
                     }
 
-                    // Ação de Clique (Abrir Tela Cheia)
                     fileCard.addEventListener('click', (e) => {
-                        // Evita abrir modal se clicou no botão de deletar
                         if(e.target.closest('.delete-btn')) return; 
                         openModal(file, fileObjURL);
                     });
 
-                    // Ação de Deletar
-                    const delBtn = fileCard.querySelector('.delete-btn');
-                    delBtn.addEventListener('click', (e) => {
+                    fileCard.querySelector('.delete-btn').addEventListener('click', (e) => {
                         e.stopPropagation();
                         deleteFile(file.id);
                     });
@@ -294,15 +290,12 @@
             }
         }
 
-        // Deletar arquivo
         function deleteFile(id) {
             const transaction = db.transaction(["files"], "readwrite");
-            const store = transaction.objectStore("files");
-            store.delete(id);
+            transaction.objectStore("files").delete(id);
             transaction.oncomplete = () => loadFiles();
         }
 
-        // Lógica do Modal (Tela Cheia)
         function openModal(file, objectURL) {
             modalFileName.textContent = file.name;
             modalDownloadBtn.href = objectURL;
@@ -310,90 +303,77 @@
             modalContentContainer.innerHTML = '';
 
             if (file.type.includes('image')) {
-                const img = document.createElement('img');
-                img.src = objectURL;
-                img.className = "max-w-full max-h-full object-contain rounded-lg shadow-2xl drop-shadow-2xl";
-                modalContentContainer.appendChild(img);
-            } else if (file.type === 'application/pdf' || file.type.includes('text') || file.type.includes('json')) {
-                const iframe = document.createElement('iframe');
-                iframe.src = objectURL;
-                iframe.className = "w-full h-full bg-white rounded-lg shadow-2xl";
-                modalContentContainer.appendChild(iframe);
+                modalContentContainer.innerHTML = `<img src="${objectURL}" class="max-w-full max-h-full object-contain rounded-xl shadow-2xl select-none pointer-events-none">`;
             } else if (file.type.includes('video')) {
-                const video = document.createElement('video');
-                video.src = objectURL;
-                video.controls = true;
-                video.className = "max-w-full max-h-full rounded-lg shadow-2xl";
-                modalContentContainer.appendChild(video);
+                modalContentContainer.innerHTML = `<video src="${objectURL}" controls autoplay class="max-w-full max-h-full rounded-xl shadow-2xl"></video>`;
+            } else if (file.type.includes('audio')) {
+                modalContentContainer.innerHTML = `
+                    <div class="bg-white/10 p-8 rounded-3xl backdrop-blur-md flex flex-col items-center">
+                        <i class="fas fa-music text-6xl text-blue-400 mb-6 drop-shadow-lg"></i>
+                        <audio src="${objectURL}" controls class="w-64 md:w-80"></audio>
+                    </div>`;
+            } else if (file.type === 'application/pdf') {
+                modalContentContainer.innerHTML = `<iframe src="${objectURL}" class="w-full h-full bg-white rounded-xl shadow-2xl border-0"></iframe>`;
             } else {
                 modalContentContainer.innerHTML = `
-                    <div class="text-center text-white">
-                        <i class="fas fa-file-alt text-7xl mb-4 text-gray-400"></i>
-                        <h2 class="text-2xl font-bold mb-2">Sem visualização disponível</h2>
-                        <p class="text-gray-400 mb-6">Este tipo de arquivo não pode ser visualizado diretamente no navegador.</p>
-                        <a href="${objectURL}" download="${file.name}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2">
-                            <i class="fas fa-download"></i> Baixar Arquivo
+                    <div class="text-center text-white flex flex-col items-center bg-white/5 p-10 rounded-3xl backdrop-blur-sm border border-white/10">
+                        <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-6">
+                            <i class="fas fa-file-alt text-5xl text-gray-300"></i>
+                        </div>
+                        <h2 class="text-xl md:text-2xl font-bold mb-2 tracking-tight">sem preview</h2>
+                        <p class="text-sm text-gray-400 mb-8 max-w-xs">baixe o arquivo para abrir no seu dispositivo</p>
+                        <a href="${objectURL}" download="${file.name}" class="bg-blue-600 hover:bg-blue-500 active:scale-95 text-white px-8 py-3.5 rounded-full font-bold inline-flex items-center gap-3 transition-all shadow-lg hover:shadow-blue-600/50">
+                            <i class="fas fa-download"></i> baixar agora
                         </a>
                     </div>
                 `;
             }
 
             modal.classList.remove('hidden');
-            // Timeout pequeno para fazer a animação de fade-in
-            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            requestAnimationFrame(() => modal.classList.remove('opacity-0'));
         }
 
         closeModalBtn.addEventListener('click', () => {
             modal.classList.add('opacity-0');
             setTimeout(() => {
                 modal.classList.add('hidden');
-                modalContentContainer.innerHTML = ''; // limpa iframe/imgs
+                modalContentContainer.innerHTML = ''; 
             }, 300);
         });
 
-        // Lógica de Upload via Botão
-        uploadBtn.addEventListener('click', () => fileInput.click());
+        // click handlers de upload
+        const handleUploadClick = () => fileInput.click();
+        uploadBtn.addEventListener('click', handleUploadClick);
+        fabUploadBtn.addEventListener('click', handleUploadClick);
+        
         fileInput.addEventListener('change', (e) => {
             Array.from(e.target.files).forEach(file => saveFile(file));
-            fileInput.value = ''; // Limpa input
+            fileInput.value = ''; 
         });
 
-        // Lógica de Drag & Drop
+        // drag & drop pc
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            document.body.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
         });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
 
         ['dragenter', 'dragover'].forEach(eventName => {
-            document.body.addEventListener(eventName, () => {
-                dropOverlay.classList.remove('opacity-0');
-            }, false);
+            document.body.addEventListener(eventName, () => dropOverlay.classList.remove('opacity-0'), false);
         });
 
         ['dragleave', 'drop'].forEach(eventName => {
             document.body.addEventListener(eventName, (e) => {
-                if (e.target === dropOverlay || eventName === 'drop') {
-                    dropOverlay.classList.add('opacity-0');
-                }
+                if (e.target === dropOverlay || eventName === 'drop') dropOverlay.classList.add('opacity-0');
             }, false);
         });
 
         document.body.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            Array.from(files).forEach(file => saveFile(file));
+            Array.from(e.dataTransfer.files).forEach(file => saveFile(file));
         }, false);
     </script>
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('PWA ATIVADO JURO VEY'))
-      .catch((err) => console.log('DEU RUIM ;-; ', err));
-  }
-</script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
+        }
+    </script>
 </body>
 </html>
