@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Backrooms Mobile Edition 👁️👄👁️</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: sans-serif;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        /* UI de Toque */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .interactive {
+            pointer-events: auto;
+        }
+        /* Joystick */
+        #joystick-bound {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #joystick-stick {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            position: absolute;
+        }
+        /* Botão Configurações */
+        #config-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #e2d4a8;
+            color: #e2d4a8;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        /* Menu de Configurações */
+        #config-menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 20, 0.95);
+            border: 3px solid #8c7d50;
+            padding: 30px;
+            border-radius: 12px;
+            color: #fff;
+            z-index: 20;
+            display: none;
+            width: 320px;
+        }
+        #config-menu h2 {
+            margin-bottom: 20px;
+            color: #e2d4a8;
+            text-align: center;
+        }
+        .menu-row {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .menu-row label {
+            font-size: 14px;
+        }
+        .menu-row input[type="range"] {
+            width: 120px;
+        }
+        #close-config {
+            width: 100%;
+            padding: 10px;
+            background: #8c7d50;
+            border: none;
+            color: #fff;
+            font-weight: bold;
+            border-radius: 5px;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+        /* HUD Superior */
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #e2d4a8;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px #000;
+        }
+        /* Tela de Aviso Rotacionar */
+        @media (orientation: portrait) {
+            #portrait-warning {
+                display: flex !important;
+            }
+        }
+        #portrait-warning {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #111;
+            color: #e2d4a8;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+        /* Tela de Início / Game Over / Vitória */
+        #overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #e2d4a8;
+            text-align: center;
+        }
+        #overlay-screen h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #ff3333;
+            text-shadow: 3px 3px #000;
+        }
+        #start-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: #8c7d50;
+            color: #000;
+            border: none;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 5px #5a4f32;
+        }
+        #start-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px #5a4f32;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div id="portrait-warning">
+        <h2>👁️👄👁️ GUSTAVINHO, GIRE O CELULAR!</h2>
+        <p style="margin-top: 10px;">Esse jogo foi feito para ser jogado em Modo Paisagem (Deitado).</p>
+    </div>
+
+    <div id="overlay-screen">
+        <h1 id="screen-title">THE BACKROOMS</h1>
+        <p id="screen-desc" style="margin-bottom: 30px;">Ache a saída brilhante antes que o bicho te pegue.</p>
+        <button id="start-btn" class="interactive">JOGAR</button>
+    </div>
+
+    <div id="ui-layer">
+        <div id="hud">LEVEL: <span id="lbl-level">1</span> | VIDAS: <span id="lbl-lives">3</span></div>
+        <button id="config-btn" class="interactive">CONFIGS</button>
+
+        <div id="joystick-bound" class="interactive">
+            <div id="joystick-stick"></div>
+        </div>
+    </div>
+
+    <div id="config-menu" class="interactive">
+        <h2>Configurações</h2>
+        <div class="menu-row">
+            <label for="sens-cam">Sensib. Câmera:</label>
+            <input type="range" id="sens-cam" min="1" max="10" value="5">
+        </div>
+        <div class="menu-row">
+            <label for="inv-cam-x">Inverter Olha para Lados:</label>
+            <input type="checkbox" id="inv-cam-x">
+        </div>
+        <div class="menu-row">
+            <label for="inv-cam-y">Inverter Olha para Cima/Baixo:</label>
+            <input type="checkbox" id="inv-cam-y">
+        </div>
+        <div class="menu-row">
+            <label for="inv-joy">Inverter Joystick:</label>
+            <input type="checkbox" id="inv-joy">
+        </div>
+        <button id="close-config">SALVAR E FECHAR</button>
+    </div>
+
+    <script>
+        // --- ESTADO GLOBAL DO JOGO ---
+        let gameActive = false;
+        let currentLevel = 1;
+        let lives = 3;
+        
+        // Configurações padrão ajustáveis
+        let config = {
+            sensibilidade: 0.005,
+            invertCamX: false,
+            invertCamY: false,
+            invertJoy: false
+        };
+
+        // --- ENGINE 3D (THREE.JS) ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a05);
+        scene.fog = new THREE.FogExp2(0x14140a, 0.15); // Névoa amarelada claustrofóbica
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        container.appendChild(renderer.domElement);
+
+        // --- SISTEMA DE AUDIO (WEB AUDIO API) ---
+        let audioCtx = null;
+        function playMonsterSound(pitch = 100, type = 'sawtooth') {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            
+            osc.type = type;
+            osc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
+            // Som tremido/bizarro
+            osc.frequency.linearRampToValueAtTime(pitch - 40, audioCtx.currentTime + 0.3);
+            
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        }
+
+        // --- ILUMINAÇÃO REFORÇADA (Evita tela preta) ---
+        const ambientLight = new THREE.AmbientLight(0xfffae0, 0.4); 
+        scene.add(ambientLight);
+
+        // Criar pontos de luzes estilo lâmpadas fluorescentes
+        function addFluorescentLight(x, z) {
+            const pointLight = new THREE.PointLight(0xfff6bd, 0.8, 15);
+            pointLight.position.set(x, 3.8, z);
+            scene.add(pointLight);
+
+            // Suporte visual da lâmpada
+            const geo = new THREE.BoxGeometry(1, 0.1, 0.2);
+            const mat = new THREE.MeshBasicMaterial({color: 0xffffff});
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(x, 3.9, z);
+            scene.add(mesh);
+        }
+
+        // --- CRIAÇÃO DOS MAPAS (Grids Dinâmicos) ---
+        // 1 = Parede normal, 2 = Pilar Largo, 4 = Saída, 0 = Vazio
+        let mapGrid = [];
+        let mapSize = 16;
+        const cellSize = 4;
+        let wallsArray = [];
+        let exitMesh = null;
+        let monsters = [];
+
+        function buildLevel(level) {
+            // Limpeza do level anterior
+            wallsArray.forEach(w => scene.remove(w));
+            wallsArray = [];
+            monsters.forEach(m => scene.remove(m.mesh));
+            monsters = [];
+            if (exitMesh) scene.remove(exitMesh);
+
+            // Gerador de mapas com base no level
+            mapGrid = [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,2,0,0,0,0,0,1,0,0,0,0,1],
+                [1,0,1,0,0,0,1,1,0,0,2,0,1,1,0,1],
+                [1,0,1,1,1,0,1,0,0,0,0,0,0,1,0,1],
+                [1,0,0,0,1,0,0,0,2,2,0,1,0,0,0,1],
+                [1,1,1,0,2,0,1,1,1,1,0,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
+                [1,0,2,2,2,0,1,1,0,2,0,1,0,0,0,1],
+                [1,0,0,0,0,0,1,4,0,0,0,1,1,1,0,1],
+                [1,0,1,1,1,1,1,1,1,0,0,0,0,1,0,1],
+                [1,0,1,0,0,0,0,0,1,1,1,0,0,1,0,1],
+                [1,0,2,0,1,1,1,0,0,0,1,0,2,2,0,1],
+                [1,0,0,0,1,0,1,1,1,0,1,0,0,0,0,1],
+                [1,0,1,0,0,0,0,0,1,0,0,0,1,1,0,1],
+                [1,0,0,0,2,2,2,0,0,0,2,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ];
+
+            // Materiais customizados (Cores clássicas das Backrooms)
+            const wallMat = new THREE.MeshLambertMaterial({ color: 0xdfcf96 }); // Amarelo monótono
+            const pillarMat = new THREE.MeshLambertMaterial({ color: 0xcfc086 }); // Pilar largo
+            const floorMat = new THREE.MeshLambertMaterial({ color: 0x7a6b43 }); // Carpete úmido
+            const ceilMat = new THREE.MeshLambertMaterial({ color: 0x3a3525 }); // Teto escuro
+
+            // Chão e Teto Globais
+            const floorGeo = new THREE.PlaneGeometry(mapSize * cellSize, mapSize * cellSize);
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.set((mapSize*cellSize)/2 - cellSize/2, 0, (mapSize*cellSize)/2 - cellSize/2);
+            scene.add(floor);
+            wallsArray.push(floor);
+
+            const ceil = new THREE.Mesh(floorGeo, ceilMat);
+            ceil.rotation.x = Math.PI / 2;
+            ceil.position.set((mapSize*cellSize)/2 - cellSize/2, 4, (mapSize*cellSize)/2 - cellSize/2);
+            scene.add(ceil);
+            wallsArray.push(ceil);
+
+            // Construindo a geometria da arquitetura
+            for(let r=0; r<mapSize; r++) {
+                for(let c=0; c<mapSize; c++) {
+                    let type = mapGrid[r][c];
+                    let x = c * cellSize;
+                    let z = r * cellSize;
+
+                    if(type === 1) {
+                        // Parede comum
+                        const geo = new THREE.BoxGeometry(cellSize, 4, cellSize);
+                        const mesh = new THREE.Mesh(geo, wallMat);
+                        mesh.position.set(x, 2, z);
+                        scene.add(mesh);
+                        wallsArray.push(mesh);
+                    } 
+                    else if(type === 2) {
+                        // PILAR BEM LARGO (Ocupa espaço imponente)
+                        const geo = new THREE.BoxGeometry(cellSize * 1.5, 4, cellSize * 1.5);
+                        const mesh = new THREE.Mesh(geo, pillarMat);
+                        mesh.position.set(x, 2, z);
+                        scene.add(mesh);
+                        wallsArray.push(mesh);
+                    } 
+                    else if(type === 4) {
+                        // Zona de Saída Próximo Level (Brilhante)
+                        const geo = new THREE.BoxGeometry(cellSize * 0.8, 3.8, cellSize * 0.8);
+                        const mat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true });
+                        exitMesh = new THREE.Mesh(geo, mat);
+                        exitMesh.position.set(x, 1.9, z);
+                        scene.add(exitMesh);
+                        
+                        // Luz indicativa na saída
+                        const exitLight = new THREE.PointLight(0x00ffcc, 1.5, 8);
+                        exitLight.position.set(x, 2, z);
+                        scene.add(exitLight);
+                    }
+
+                    // Colocar iluminação periódica nas salas limpas
+                    if((r + c) % 5 === 0 && type === 0) {
+                        addFluorescentLight(x, z);
+                    }
+                }
+            }
+
+            // Criar Monstros baseados no Level atual
+            let monsterCount = level === 1 ? 1 : 3;
+            for(let i=0; i<monsterCount; i++) {
+                createDetailedMonster(level, i);
+            }
+
+            // Resetar posição do jogador em local seguro (Ex: célula 1,1)
+            camera.position.set(cellSize, 1.6, cellSize);
+            camera.rotation.set(0, 0, 0);
+        }
+
+        // --- MONSTRO DETALHADO POR CÓDIGO (Bixo Preto) ---
+        function createDetailedMonster(level, index) {
+            const monsterGroup = new THREE.Group();
+
+            // Corpo principal preto e bizarro
+            const bodyGeo = new THREE.CylinderGeometry(0.3, 0.1, 2, 8);
+            const blackMat = new THREE.MeshStandardMaterial({ 
+                color: 0x050505, 
+                roughness: 0.9, 
+                metalness: 0.1,
+                wireframe: (level > 1) // Fica mais deformado/bizarro nos próximos níveis
+            });
+            const body = new THREE.Mesh(bodyGeo, blackMat);
+            body.position.y = 1;
+            monsterGroup.add(body);
+
+            // Cabeça assimétrica
+            const headGeo = new THREE.SphereGeometry(0.35, 6, 6);
+            const head = new THREE.Mesh(headGeo, blackMat);
+            head.position.y = 2.1;
+            monsterGroup.add(head);
+
+            // Olhos macabros (Mudam de cor por level)
+            const eyeColor = level === 1 ? 0xff0000 : 0xffaa00;
+            const eyeGeo = new THREE.SphereGeometry(0.06, 4, 4);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: eyeColor });
+            
+            const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+            eyeL.position.set(-0.12, 2.15, 0.25);
+            const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+            eyeR.position.set(0.12, 2.15, 0.25);
+            monsterGroup.add(eyeL, eyeR);
+
+            // Membros/Tentáculos longos e detalhados arrancados do tronco
+            for(let j=0; j<6; j++) {
+                const limbGeo = new THREE.BoxGeometry(0.06, 1.5, 0.06);
+                const limb = new THREE.Mesh(limbGeo, blackMat);
+                limb.position.set((Math.random() - 0.5)*0.6, 1.0, (Math.random() - 0.5)*0.6);
+                limb.rotation.z = (Math.random() - 0.5) * 2;
+                limb.rotation.x = (Math.random() - 0.5) * 2;
+                monsterGroup.add(limb);
+            }
+
+            // Definir posições iniciais espalhadas pelo mapa vazio
+            let placed = false;
+            while(!placed) {
+                let rx = Math.floor(Math.random() * (mapSize - 2)) + 1;
+                let rz = Math.floor(Math.random() * (mapSize - 2)) + 1;
+                if(mapGrid[rz][rx] === 0 && (rx > 3 || rz > 3)) {
+                    monsterGroup.position.set(rx * cellSize, 0, rz * cellSize);
+                    placed = true;
+                }
+            }
+
+            scene.add(monsterGroup);
+            monsters.push({
+                mesh: monsterGroup,
+                speed: 1.2 + (level * 0.4) + (index * 0.2),
+                lastSoundTime: 0
+            });
+        }
+
+
+        // --- CONTROLES MOBILE CONFIGURADOS (Sem inversão errada) ---
+        let touchStart = { x: 0, y: 0 };
+        let joystickActive = false;
+        let moveVector = { x: 0, y: 0 };
+
+        const joyBound = document.getElementById('joystick-bound');
+        const joyStick = document.getElementById('joystick-stick');
+        const boundRect = joyBound.getBoundingClientRect();
+        const maxRadius = 50;
+
+        // Controle de rotação da câmera (Olhar)
+        let lastLookTouchId = null;
+        let lastLookPos = { x: 0, y: 0 };
+
+        window.addEventListener('touchstart', (e) => {
+            for(let i=0; i<e.changedTouches.length; i++) {
+                let t = e.changedTouches[i];
+                
+                // Zona do Joystick (Lado esquerdo da tela)
+                if(t.clientX < window.innerWidth / 2 && !joystickActive) {
+                    joystickActive = true;
+                    touchStart.x = t.clientX;
+                    touchStart.y = t.clientY;
+                    joyStick.style.transition = 'none';
+                } 
+                // Zona de Olhar (Lado direito da tela)
+                else if(t.clientX >= window.innerWidth / 2 && lastLookTouchId === null) {
+                    lastLookTouchId = t.identifier;
+                    lastLookPos.x = t.clientX;
+                    lastLookPos.y = t.clientY;
+                }
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            for(let i=0; i<e.changedTouches.length; i++) {
+                let t = e.changedTouches[i];
+
+                if(joystickActive && t.clientX < window.innerWidth / 2) {
+                    let dx = t.clientX - touchStart.x;
+                    let dy = t.clientY - touchStart.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+
+                    if(dist > maxRadius) {
+                        dx = (dx / dist) * maxRadius;
+                        dy = (dy / dist) * maxRadius;
+                    }
+
+                    // Se inverter joystick estiver ativo nas configs
+                    let sign = config.invertJoy ? -1 : 1;
+                    
+                    joyStick.style.transform = `translate(${dx}px, ${dy}px)`;
+                    
+                    // Normalizado para movimentação do motor
+                    moveVector.x = (dx / maxRadius) * sign;
+                    moveVector.y = (dy / maxRadius) * sign;
+                }
+
+                if(lastLookTouchId === t.identifier) {
+                    let dx = t.clientX - lastLookPos.x;
+                    let dy = t.clientY - lastLookPos.y;
+
+                    // Aplicação direta e natural da rotação (Garantindo que NÃO venha invertido)
+                    let invX = config.invertCamX ? 1 : -1;
+                    let invY = config.invertCamY ? -1 : 1;
+
+                    camera.rotation.y += dx * config.sensibilidade * invX;
+                    camera.rotation.x -= dy * config.sensibilidade * invY;
+                    
+                    // Trava para não quebrar o pescoço em 360 vertical KKKK
+                    camera.rotation.x = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, camera.rotation.x));
+
+                    lastLookPos.x = t.clientX;
+                    lastLookPos.y = t.clientY;
+                }
+            }
+        }, { passive: false });
+
+        const resetJoystick = () => {
+            joystickActive = false;
+            moveVector = { x: 0, y: 0 };
+            joyStick.style.transition = 'all 0.2s ease';
+            joyStick.style.transform = 'translate(0px, 0px)';
+        };
+
+        window.addEventListener('touchend', (e) => {
+            for(let i=0; i<e.changedTouches.length; i++) {
+                let t = e.changedTouches[i];
+                if(t.clientX < window.innerWidth / 2) {
+                    resetJoystick();
+                }
+                if(lastLookTouchId === t.identifier) {
+                    lastLookTouchId = null;
+                }
+            }
+        });
+
+        window.addEventListener('touchcancel', (e) => {
+            resetJoystick();
+            lastLookTouchId = null;
+        });
+
+
+        // --- SISTEMA DE COLISÃO COM PAREDES ---
+        function checkCollision(newPos) {
+            // Converter coordenadas do mundo 3D direto para o índice da Grid do mapa
+            let c = Math.round(newPos.x / cellSize);
+            let r = Math.round(newPos.z / cellSize);
+
+            if(r >= 0 && r < mapSize && c >= 0 && c < mapSize) {
+                let tile = mapGrid[r][c];
+                // Retorna verdadeiro se for obstáculo imóvel (Parede ou Pilar Largo)
+                return (tile === 1 || tile === 2);
+            }
+            return true;
+        }
+
+        // --- LOOP PRINCIPAL DO JOGO (RENDER E LÓGICA) ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (gameActive) {
+                const delta = clock.getDelta();
+
+                // 1. Movimentação do Jogador baseada na Câmera
+                if (moveVector.x !== 0 || moveVector.y !== 0) {
+                    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+                    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+                    
+                    // Manter movimento apenas no plano horizontal
+                    forward.y = 0; right.y = 0;
+                    forward.normalize(); right.normalize();
+
+                    // Vetor resultante da direção solicitada pelo joystick
+                    let targetMove = forward.clone().multiplyScalar(-moveVector.y * 3.5 * delta)
+                                    .add(right.clone().multiplyScalar(moveVector.x * 3.5 * delta));
+
+                    // Aplica checagem de colisão por eixos separados para deslizar suave pelas superfícies
+                    let nextPos = camera.position.clone();
+                    nextPos.x += targetMove.x;
+                    if (!checkCollision(nextPos)) camera.position.x = nextPos.x;
+
+                    nextPos = camera.position.clone();
+                    nextPos.z += targetMove.z;
+                    if (!checkCollision(nextPos)) camera.position.z = nextPos.z;
+                }
+
+                // 2. Lógica Inteligente dos Monstros (Perseguição e Som Dinâmico)
+                let now = performance.now();
+                monsters.forEach(monster => {
+                    let mMesh = monster.mesh;
+                    
+                    // Fazer o bicho olhar sempre pro jogador horizontalmente
+                    mMesh.lookAt(camera.position.x, mMesh.position.y, camera.position.z);
+
+                    // Vetor de direção até o player
+                    let dir = new THREE.Vector3().subVectors(camera.position, mMesh.position);
+                    dir.y = 0; 
+                    let distance = dir.length();
+                    dir.normalize();
+
+                    // Movimento do monstro em direção ao jogador
+                    mMesh.position.add(dir.multiplyScalar(monster.speed * delta));
+
+                    // Animação bizarra nos tentáculos/membros simulando distorção
+                    mMesh.children.forEach((child, idx) => {
+                        if(idx > 1) { 
+                            child.rotation.x += Math.sin(now * 0.01 + idx) * 0.05;
+                        }
+                    });
+
+                    // Sistema de Som de proximidade (Grita mais forte e agudo quanto mais perto!)
+                    if (distance < 12 && now - monster.lastSoundTime > (distance * 100 + 200)) {
+                        let pitch = 160 - (distance * 8); 
+                        let type = currentLevel === 1 ? 'sawtooth' : 'triangle';
+                        playMonsterSound(Math.max(50, pitch), type);
+                        monster.lastSoundTime = now;
+                    }
+
+                    // GAME OVER - Bicho encostou no jogador
+                    if (distance < 0.9) {
+                        lives--;
+                        document.getElementById('lbl-lives').innerText = lives;
+                        playMonsterSound(40, 'square'); // Som catastrófico de dano
+                        
+                        if (lives <= 0) {
+                            triggerGameOver(false);
+                        } else {
+                            // Respawn seguro instantâneo no início da fase
+                            camera.position.set(cellSize, 1.6, cellSize);
+                        }
+                    }
+                });
+
+                // 3. Checagem de vitória/próximo nível na saída brilhante
+                if (exitMesh) {
+                    let distToExit = camera.position.distanceTo(exitMesh.position);
+                    if (distToExit < 1.2) {
+                        if (currentLevel < 3) {
+                            currentLevel++;
+                            document.getElementById('lbl-level').innerText = currentLevel;
+                            buildLevel(currentLevel);
+                            playMonsterSound(400, 'sine'); // Som de conquista
+                        } else {
+                            triggerGameOver(true); // Fim absoluto das Backrooms
+                        }
+                    }
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function triggerGameOver(isVictory) {
+            gameActive = false;
+            const screen = document.getElementById('overlay-screen');
+            const title = document.getElementById('screen-title');
+            const desc = document.getElementById('screen-desc');
+            const btn = document.getElementById('start-btn');
+
+            screen.style.display = 'flex';
+            if (isVictory) {
+                title.innerText = "VOCÊ ESCAPOU! 👁️👄👁️";
+                title.style.color = "#00ffcc";
+                desc.innerText = "Incrível Gustavinho, você venceu os perigos de todos os níveis!";
+                btn.innerText = "REINICIAR";
+            } else {
+                title.innerText = "VOCÊ FOI PEGO!";
+                title.style.color = "#ff3333";
+                desc.innerText = "O bicho detalhado te alcançou na imensidão amarela...";
+                btn.innerText = "TENTAR DE NOVO";
+            }
+        }
+
+        // --- SISTEMA DE MENUS DA INTERFACE (DOM) ---
+        const startBtn = document.getElementById('start-btn');
+        const overlayScreen = document.getElementById('overlay-screen');
+        const configBtn = document.getElementById('config-btn');
+        const configMenu = document.getElementById('config-menu');
+        const closeConfig = document.getElementById('close-config');
+
+        startBtn.addEventListener('click', () => {
+            overlayScreen.style.display = 'none';
+            if (lives <= 0 || currentLevel === 3) {
+                lives = 3;
+                currentLevel = 1;
+                document.getElementById('lbl-lives').innerText = lives;
+                document.getElementById('lbl-level').innerText = currentLevel;
+            }
+            buildLevel(currentLevel);
+            gameActive = true;
+            clock.getDelta(); // Resetar o relógio interno
+        });
+
+        configBtn.addEventListener('click', () => {
+            configMenu.style.display = 'block';
+            gameActive = false;
+        });
+
+        closeConfig.addEventListener('click', () => {
+            // Aplicando o que foi definido pelo usuário no menu
+            const sensInput = document.getElementById('sens-cam').value;
+            config.sensibilidade = (sensInput / 1000) * 2; // Traduzindo para escala do motor
+            
+            config.invertCamX = document.getElementById('inv-cam-x').checked;
+            config.invertCamY = document.getElementById('inv-cam-y').checked;
+            config.invertJoy = document.getElementById('inv-joy').checked;
+
+            configMenu.style.display = 'none';
+            if (overlayScreen.style.display === 'none') {
+                gameActive = true;
+                clock.getDelta();
+            }
+        });
+
+        // Responsividade para alteração de tamanho da tela em tempo real
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Início instantâneo da estrutura de animação
+        animate();
+
+    </script>
+</body>
+</html>
