@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GuestABC NewTab</title>
+
+<!-- Google official fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@300;400;500;700&family=Material+Symbols+Rounded" rel="stylesheet">
+
+<style>
+:root{
+ --primary:#4f8cff;
+ --surface:rgba(255,255,255,.18);
+ --text:#fff;
+ --radius:28px;
+ --blur:20px;
+ --shadow:0 8px 30px rgba(0,0,0,.25);
+}
+
+*{
+ box-sizing:border-box;
+ font-family:'Roboto Flex',sans-serif;
+ transition:.25s;
+}
+
+body{
+ margin:0;
+ min-height:100vh;
+ background:linear-gradient(45deg,#0a84ff,#4f8cff,#8bc4ff);
+ background-size:400% 400%;
+ animation:bgFlash 6s infinite;
+ color:var(--text);
+ padding:16px;
+}
+
+@keyframes bgFlash{
+ 0%{background-position:0% 50%}
+ 50%{background-position:100% 50%}
+ 100%{background-position:0% 50%}
+}
+
+.dark{
+ background:linear-gradient(45deg,#000,#111,#222);
+}
+
+.card{
+ backdrop-filter:blur(var(--blur));
+ background:var(--surface);
+ border-radius:var(--radius);
+ padding:18px;
+ margin-bottom:18px;
+ box-shadow:var(--shadow);
+ border:1px solid rgba(255,255,255,.2);
+}
+
+h1{
+ margin:0;
+ font-size:34px;
+ font-weight:700;
+}
+
+button,input,select{
+ width:100%;
+ border:none;
+ border-radius:24px;
+ padding:16px;
+ margin-top:10px;
+ background:rgba(255,255,255,.22);
+ color:white;
+ font-size:16px;
+ outline:none;
+}
+
+button{
+ cursor:pointer;
+ background:var(--primary);
+}
+
+.material-symbols-rounded{
+ font-size:32px;
+ cursor:pointer;
+}
+
+.top{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+}
+
+#settings{
+ display:none;
+}
+
+.color-grid{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:8px;
+ margin-top:10px;
+}
+
+.color{
+ height:42px;
+ border-radius:50%;
+ cursor:pointer;
+}
+
+.clock{
+ width:180px;
+ height:180px;
+ margin:auto;
+ border:8px solid rgba(255,255,255,.4);
+ border-radius:50%;
+ position:relative;
+}
+
+.hand{
+ position:absolute;
+ left:50%;
+ bottom:50%;
+ transform-origin:bottom;
+ background:white;
+ border-radius:10px;
+}
+
+.hour{
+ width:6px;
+ height:45px;
+}
+.minute{
+ width:4px;
+ height:65px;
+}
+.second{
+ width:2px;
+ height:75px;
+ background:red;
+}
+
+.favorite{
+ padding:10px;
+ background:rgba(255,255,255,.15);
+ border-radius:20px;
+ margin-top:8px;
+}
+</style>
+</head>
+<body>
+
+<div class="card top">
+<h1>GuestABC</h1>
+<span onclick="toggleSettings()" class="material-symbols-rounded">settings</span>
+</div>
+
+<div class="card">
+<div class="clock">
+<div class="hand hour" id="hour"></div>
+<div class="hand minute" id="minute"></div>
+<div class="hand second" id="second"></div>
+</div>
+<h2 id="digital" style="text-align:center"></h2>
+</div>
+
+<div class="card">
+<input id="searchBox" placeholder="Pesquisar...">
+<select id="engine">
+<option>Google</option>
+<option>Gemini</option>
+<option>ChatGPT</option>
+<option>Claude</option>
+<option>Bing</option>
+<option>Default</option>
+</select>
+<button onclick="search()">Pesquisar</button>
+</div>
+
+<div class="card">
+<h3>Widgets</h3>
+<div id="date"></div>
+<div id="battery"></div>
+</div>
+
+<div class="card">
+<h3>Favoritos</h3>
+<input id="favName" placeholder="Nome">
+<input id="favUrl" placeholder="URL">
+<button onclick="saveFav()">Salvar</button>
+<div id="favorites"></div>
+</div>
+
+<div class="card" id="settings">
+<h3>Configurações</h3>
+<button onclick="toggleDark()">Modo escuro</button>
+
+<h4>Cor Material You</h4>
+<div class="color-grid">
+<div class="color" style="background:#ff5252" onclick="setColor('#ff5252')"></div>
+<div class="color" style="background:#4f8cff" onclick="setColor('#4f8cff')"></div>
+<div class="color" style="background:#00c853" onclick="setColor('#00c853')"></div>
+<div class="color" style="background:#ffd600" onclick="setColor('#ffd600')"></div>
+<div class="color" style="background:#aa00ff" onclick="setColor('#aa00ff')"></div>
+<div class="color" style="background:#ff6d00" onclick="setColor('#ff6d00')"></div>
+<div class="color" style="background:#00b8d4" onclick="setColor('#00b8d4')"></div>
+<div class="color" style="background:#ec407a" onclick="setColor('#ec407a')"></div>
+</div>
+</div>
+
+<script>
+function clock(){
+ let d=new Date();
+
+ let h=d.getHours()%12;
+ let m=d.getMinutes();
+ let s=d.getSeconds();
+
+ document.getElementById("hour").style.transform=
+ `translateX(-50%) rotate(${h*30+m/2}deg)`;
+
+ document.getElementById("minute").style.transform=
+ `translateX(-50%) rotate(${m*6}deg)`;
+
+ document.getElementById("second").style.transform=
+ `translateX(-50%) rotate(${s*6}deg)`;
+
+ document.getElementById("digital").innerText=
+ d.toLocaleTimeString();
+
+ document.getElementById("date").innerText=
+ "📅 "+d.toLocaleDateString();
+}
+setInterval(clock,1000);
+clock();
+
+navigator.getBattery?.().then(b=>{
+ function upd(){
+   document.getElementById("battery").innerText=
+   "🔋 "+Math.round(b.level*100)+"%";
+ }
+ upd();
+ b.addEventListener("levelchange",upd);
+});
+
+function search(){
+ let q=searchBox.value;
+ let e=engine.value;
+
+ let urls={
+ Google:"https://google.com/search?q=",
+ Gemini:"https://gemini.google.com/app",
+ ChatGPT:"https://chat.openai.com/",
+ Claude:"https://claude.ai/",
+ Bing:"https://bing.com/search?q=",
+ Default:"https://google.com/search?q="
+ };
+
+ if(e==="Gemini"||e==="ChatGPT"||e==="Claude"){
+   window.location=urls[e];
+ }else{
+   window.location=urls[e]+encodeURIComponent(q);
+ }
+}
+
+function toggleSettings(){
+ let s=document.getElementById("settings");
+ s.style.display=s.style.display==="block"?"none":"block";
+}
+
+function toggleDark(){
+ document.body.classList.toggle("dark");
+}
+
+function setColor(c){
+ document.documentElement.style.setProperty("--primary",c);
+ localStorage.setItem("color",c);
+}
+
+let saved=localStorage.getItem("color");
+if(saved)setColor(saved);
+
+function saveFav(){
+ let n=favName.value;
+ let u=favUrl.value;
+ let arr=JSON.parse(localStorage.favs||"[]");
+ arr.push({n,u});
+ localStorage.favs=JSON.stringify(arr);
+ loadFavs();
+}
+
+function loadFavs(){
+ let div=document.getElementById("favorites");
+ div.innerHTML="";
+ let arr=JSON.parse(localStorage.favs||"[]");
+
+ arr.forEach(f=>{
+   div.innerHTML+=
+   `<div class='favorite'
+   onclick="location='${f.u}'">
+   ${f.n}
+   </div>`;
+ });
+}
+loadFavs();
+</script>
+</body>
+</html>
