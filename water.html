@@ -3,660 +3,738 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Agua Real Pro Max</title>
+<title>Agua Real Pro Max - Ultimate Physics Edition</title>
 <style>
-body {
-margin: 0;
-padding: 0;
-width: 100vw;
-height: 100vh;
-overflow: hidden;
-background: #000;
-touch-action: none;
-}
-canvas {
-display: block;
-width: 100%;
-height: 100%;
-}
-#startBtn {
-position: absolute;
-top: 50%;
-left: 50%;
-transform: translate(-50%, -50%);
-padding: 15px 30px;
-font-size: 18px;
-background: rgba(0, 150, 255, 0.8);
-color: white;
-border: none;
-border-radius: 8px;
-cursor: pointer;
-z-index: 10;
-font-family: sans-serif;
-}
+    /* =========================================
+       CSS UI & STYLING
+       ========================================= */
+    :root {
+        --primary: #0088ff;
+        --bg-panel: rgba(10, 15, 30, 0.85);
+        --text: #e0f0ff;
+    }
+    body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #000; touch-action: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+    canvas { display: block; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+    
+    /* Telas e Menus */
+    #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+    .panel { position: absolute; background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; color: var(--text); pointer-events: auto; backdrop-filter: blur(8px); box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: all 0.3s; }
+    
+    #sandbox-menu { top: 10px; left: 10px; width: 220px; max-height: 90vh; overflow-y: auto; }
+    #config-menu { top: 10px; right: 10px; width: 200px; }
+    #thermal-hud { bottom: 20px; left: 50%; transform: translateX(-50%); text-align: center; font-size: 24px; font-weight: bold; color: #ff3366; text-shadow: 0 2px 4px #000; display: none; }
+    #event-alert { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-size: 20px; font-weight: bold; color: #fff; text-shadow: 0 0 10px #00aaff; opacity: 0; transition: opacity 0.5s; pointer-events: none; text-align: center;}
+    
+    h3 { margin: 0 0 10px 0; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
+    
+    .btn { display: block; width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px; margin-bottom: 8px; border-radius: 6px; cursor: pointer; text-align: left; transition: 0.2s; font-size: 14px; }
+    .btn:hover { background: rgba(255,255,255,0.2); }
+    .btn.active { background: var(--primary); border-color: #fff; font-weight: bold; }
+    
+    .slider-group { margin-bottom: 12px; }
+    .slider-group label { display: block; font-size: 12px; margin-bottom: 4px; }
+    input[type=range] { width: 100%; }
+
+    #startBtn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px 40px; font-size: 20px; background: linear-gradient(45deg, #0055ff, #00aaff); color: white; border: none; border-radius: 50px; cursor: pointer; z-index: 100; pointer-events: auto; box-shadow: 0 0 20px rgba(0,150,255,0.5); font-weight: bold; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.05); } 100% { transform: translate(-50%, -50%) scale(1); } }
+    
+    .danger-btn { background: rgba(255, 50, 50, 0.2) !important; color: #ff6666 !important; border-color: #ff3333 !important; text-align: center !important; font-weight: bold; margin-top: 15px;}
+    .danger-btn:hover { background: rgba(255, 50, 50, 0.4) !important; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 </style>
 </head>
 <body>
-<button id="startBtn">Tocar para Iniciar Sensores</button>
+
+<button id="startBtn">Iniciar Simulação de Fluidos</button>
+
+<div id="ui-layer">
+    <div id="sandbox-menu" class="panel">
+        <h3>Ferramentas</h3>
+        <button class="btn active" onclick="setTool('interact')">👆 Interagir / Mexer</button>
+        <button class="btn" onclick="setTool('info')">🌡️ Termômetro</button>
+        
+        <h3 style="margin-top:15px;">Elementos</h3>
+        <button class="btn" onclick="setTool('water_cold')">❄️ Água Fria (5°C)</button>
+        <button class="btn" onclick="setTool('water_hot')">♨️ Água Quente (90°C)</button>
+        <button class="btn" onclick="setTool('ice')">🧊 Gelo</button>
+        <button class="btn" onclick="setTool('oil')">🛢️ Óleo</button>
+        <button class="btn" onclick="setTool('gas_o2')">💨 Oxigênio (Bolhas)</button>
+        <button class="btn" onclick="setTool('gas_h2')">💥 Hidrogênio (Efervescente)</button>
+        <button class="btn" onclick="setTool('stone')">🪨 Pedra (Bloqueio)</button>
+        <button class="btn" onclick="setTool('whirlpool')">🌀 Redemoinho</button>
+        <button class="btn" style="color:#aaffaa;" onclick="setTool('acid')">🧪 Ácido (Surpresa)</button>
+
+        <button class="btn danger-btn" onclick="triggerDrain()">🌪️ RALO (Esvaziar)</button>
+    </div>
+
+    <div id="config-menu" class="panel">
+        <h3>Configuração</h3>
+        
+        <div class="slider-group">
+            <label>Visão Térmica</label>
+            <button class="btn" id="btn-thermal" onclick="toggleThermal()">Desativada</button>
+        </div>
+
+        <div class="slider-group">
+            <label>Nível da Água</label>
+            <input type="range" id="sl-level" min="-5" max="5" step="0.1" value="0">
+        </div>
+        
+        <div class="slider-group">
+            <label>Altura das Ondas (Força)</label>
+            <input type="range" id="sl-force" min="1" max="20" step="1" value="5">
+        </div>
+
+        <div class="slider-group">
+            <label>Temperatura Ambiente</label>
+            <input type="range" id="sl-ambient" min="0" max="100" step="1" value="25">
+        </div>
+
+        <div class="slider-group">
+            <label>Clima</label>
+            <button class="btn" id="btn-rain" onclick="toggleRain()">🌧️ Chuva: OFF</button>
+        </div>
+    </div>
+
+    <div id="thermal-hud">25.0 °C</div>
+    <div id="event-alert">ALERTA DE TROMBA D'ÁGUA!</div>
+</div>
+
 <canvas id="c"></canvas>
+
 <script>
+/* ============================================================================
+   BIBLIOTECAS MATEMÁTICAS (Vector2, Vector3, Matrix4, Ray)
+   Expandidas e otimizadas para a simulação física pesada.
+   ============================================================================ */
 class MathUtils {
-static clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
-static lerp(x, y, t) { return (1 - t) * x + t * y; }
-static smoothstep(x, min, max) {
-if (x <= min) return 0;
-if (x >= max) return 1;
-x = (x - min) / (max - min);
-return x * x * (3 - 2 * x);
-}
-}
-class Vector2 {
-constructor(x = 0, y = 0) { this.x = x; this.y = y; }
-set(x, y) { this.x = x; this.y = y; return this; }
-clone() { return new Vector2(this.x, this.y); }
-copy(v) { this.x = v.x; this.y = v.y; return this; }
-add(v) { this.x += v.x; this.y += v.y; return this; }
-addScalar(s) { this.x += s; this.y += s; return this; }
-addVectors(a, b) { this.x = a.x + b.x; this.y = a.y + b.y; return this; }
-sub(v) { this.x -= v.x; this.y -= v.y; return this; }
-subScalar(s) { this.x -= s; this.y -= s; return this; }
-subVectors(a, b) { this.x = a.x - b.x; this.y = a.y - b.y; return this; }
-multiply(v) { this.x *= v.x; this.y *= v.y; return this; }
-multiplyScalar(s) { this.x *= s; this.y *= s; return this; }
-divide(v) { this.x /= v.x; this.y /= v.y; return this; }
-divideScalar(s) { return this.multiplyScalar(1 / s); }
-dot(v) { return this.x * v.x + this.y * v.y; }
-cross(v) { return this.x * v.y - this.y * v.x; }
-lengthSq() { return this.x * this.x + this.y * this.y; }
-length() { return Math.sqrt(this.x * this.x + this.y * this.y); }
-normalize() { return this.divideScalar(this.length() || 1); }
-distanceTo(v) { return Math.sqrt(this.distanceToSquared(v)); }
-distanceToSquared(v) { let dx = this.x - v.x, dy = this.y - v.y; return dx * dx + dy * dy; }
-setLength(length) { return this.normalize().multiplyScalar(length); }
-lerp(v, alpha) { this.x += (v.x - this.x) * alpha; this.y += (v.y - this.y) * alpha; return this; }
+    static clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+    static lerp(x, y, t) { return (1 - t) * x + t * y; }
 }
 class Vector3 {
-constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; }
-set(x, y, z) { this.x = x; this.y = y; this.z = z; return this; }
-setScalar(scalar) { this.x = scalar; this.y = scalar; this.z = scalar; return this; }
-clone() { return new Vector3(this.x, this.y, this.z); }
-copy(v) { this.x = v.x; this.y = v.y; this.z = v.z; return this; }
-add(v) { this.x += v.x; this.y += v.y; this.z += v.z; return this; }
-addScalar(s) { this.x += s; this.y += s; this.z += s; return this; }
-addVectors(a, b) { this.x = a.x + b.x; this.y = a.y + b.y; this.z = a.z + b.z; return this; }
-sub(v) { this.x -= v.x; this.y -= v.y; this.z -= v.z; return this; }
-subScalar(s) { this.x -= s; this.y -= s; this.z -= s; return this; }
-subVectors(a, b) { this.x = a.x - b.x; this.y = a.y - b.y; this.z = a.z - b.z; return this; }
-multiply(v) { this.x *= v.x; this.y *= v.y; this.z *= v.z; return this; }
-multiplyScalar(scalar) { this.x *= scalar; this.y *= scalar; this.z *= scalar; return this; }
-divide(v) { this.x /= v.x; this.y /= v.y; this.z /= v.z; return this; }
-divideScalar(scalar) { return this.multiplyScalar(1 / scalar); }
-applyMatrix4(m) {
-let x = this.x, y = this.y, z = this.z;
-let e = m.elements;
-let w = 1 / (e[3] * x + e[7] * y + e[11] * z + e[15]);
-this.x = (e[0] * x + e[4] * y + e[8] * z + e[12]) * w;
-this.y = (e[1] * x + e[5] * y + e[9] * z + e[13]) * w;
-this.z = (e[2] * x + e[6] * y + e[10] * z + e[14]) * w;
-return this;
-}
-applyMatrix3(m) {
-let x = this.x, y = this.y, z = this.z;
-let e = m.elements;
-this.x = e[0] * x + e[3] * y + e[6] * z;
-this.y = e[1] * x + e[4] * y + e[7] * z;
-this.z = e[2] * x + e[5] * y + e[8] * z;
-return this;
-}
-transformDirection(m) {
-let x = this.x, y = this.y, z = this.z;
-let e = m.elements;
-this.x = e[0] * x + e[4] * y + e[8] * z;
-this.y = e[1] * x + e[5] * y + e[9] * z;
-this.z = e[2] * x + e[6] * y + e[10] * z;
-return this.normalize();
-}
-dot(v) { return this.x * v.x + this.y * v.y + this.z * v.z; }
-lengthSq() { return this.x * this.x + this.y * this.y + this.z * this.z; }
-length() { return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z); }
-normalize() { return this.divideScalar(this.length() || 1); }
-cross(v) { return this.crossVectors(this, v); }
-crossVectors(a, b) {
-let ax = a.x, ay = a.y, az = a.z;
-let bx = b.x, by = b.y, bz = b.z;
-this.x = ay * bz - az * by;
-this.y = az * bx - ax * bz;
-this.z = ax * by - ay * bx;
-return this;
-}
-distanceTo(v) { return Math.sqrt(this.distanceToSquared(v)); }
-distanceToSquared(v) {
-let dx = this.x - v.x, dy = this.y - v.y, dz = this.z - v.z;
-return dx * dx + dy * dy + dz * dz;
-}
-setLength(length) { return this.normalize().multiplyScalar(length); }
-lerp(v, alpha) {
-this.x += (v.x - this.x) * alpha;
-this.y += (v.y - this.y) * alpha;
-this.z += (v.z - this.z) * alpha;
-return this;
-}
-lerpVectors(v1, v2, alpha) { return this.subVectors(v2, v1).multiplyScalar(alpha).add(v1); }
-}
-class Vector4 {
-constructor(x = 0, y = 0, z = 0, w = 1) { this.x = x; this.y = y; this.z = z; this.w = w; }
-set(x, y, z, w) { this.x = x; this.y = y; this.z = z; this.w = w; return this; }
-clone() { return new Vector4(this.x, this.y, this.z, this.w); }
-copy(v) { this.x = v.x; this.y = v.y; this.z = v.z; this.w = v.w; return this; }
-}
-class Matrix3 {
-constructor() {
-this.elements = new Float32Array([
-1, 0, 0,
-0, 1, 0,
-0, 0, 1
-]);
-}
-identity() {
-let e = this.elements;
-e[0] = 1; e[3] = 0; e[6] = 0;
-e[1] = 0; e[4] = 1; e[7] = 0;
-e[2] = 0; e[5] = 0; e[8] = 1;
-return this;
-}
-invert() {
-let te = this.elements;
-let n11 = te[0], n21 = te[1], n31 = te[2];
-let n12 = te[3], n22 = te[4], n32 = te[5];
-let n13 = te[6], n23 = te[7], n33 = te[8];
-let t11 = n33 * n22 - n32 * n23;
-let t12 = n32 * n13 - n33 * n12;
-let t13 = n23 * n12 - n22 * n13;
-let det = n11 * t11 + n21 * t12 + n31 * t13;
-if (det === 0) return this.identity();
-let detInv = 1 / det;
-te[0] = t11 * detInv;
-te[1] = (n31 * n23 - n33 * n21) * detInv;
-te[2] = (n32 * n21 - n31 * n22) * detInv;
-te[3] = t12 * detInv;
-te[4] = (n33 * n11 - n31 * n13) * detInv;
-te[5] = (n31 * n12 - n32 * n11) * detInv;
-te[6] = t13 * detInv;
-te[7] = (n21 * n13 - n23 * n11) * detInv;
-te[8] = (n22 * n11 - n21 * n12) * detInv;
-return this;
-}
-transpose() {
-let tmp, m = this.elements;
-tmp = m[1]; m[1] = m[3]; m[3] = tmp;
-tmp = m[2]; m[2] = m[6]; m[6] = tmp;
-tmp = m[5]; m[5] = m[7]; m[7] = tmp;
-return this;
-}
-getNormalMatrix(matrix4) {
-return this.setFromMatrix4(matrix4).invert().transpose();
-}
-setFromMatrix4(m) {
-let me = m.elements, te = this.elements;
-te[0] = me[0]; te[3] = me[4]; te[6] = me[8];
-te[1] = me[1]; te[4] = me[5]; te[7] = me[9];
-te[2] = me[2]; te[5] = me[6]; te[8] = me[10];
-return this;
-}
+    constructor(x=0,y=0,z=0){this.x=x;this.y=y;this.z=z;}
+    set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}
+    clone(){return new Vector3(this.x,this.y,this.z);}
+    copy(v){this.x=v.x;this.y=v.y;this.z=v.z;return this;}
+    add(v){this.x+=v.x;this.y+=v.y;this.z+=v.z;return this;}
+    subVectors(a,b){this.x=a.x-b.x;this.y=a.y-b.y;this.z=a.z-b.z;return this;}
+    multiplyScalar(s){this.x*=s;this.y*=s;this.z*=s;return this;}
+    dot(v){return this.x*v.x+this.y*v.y+this.z*v.z;}
+    length(){return Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);}
+    normalize(){let l=this.length(); return l===0?this:this.multiplyScalar(1/l);}
+    crossVectors(a,b){
+        let ax=a.x,ay=a.y,az=a.z; let bx=b.x,by=b.y,bz=b.z;
+        this.x=ay*bz-az*by; this.y=az*bx-ax*bz; this.z=ax*by-ay*bx; return this;
+    }
+    applyMatrix4(m){
+        let x=this.x,y=this.y,z=this.z,e=m.elements;
+        let w=1/(e[3]*x+e[7]*y+e[11]*z+e[15]);
+        this.x=(e[0]*x+e[4]*y+e[8]*z+e[12])*w;
+        this.y=(e[1]*x+e[5]*y+e[9]*z+e[13])*w;
+        this.z=(e[2]*x+e[6]*y+e[10]*z+e[14])*w;
+        return this;
+    }
 }
 class Matrix4 {
-constructor() {
-this.elements = new Float32Array([
-1, 0, 0, 0,
-0, 1, 0, 0,
-0, 0, 1, 0,
-0, 0, 0, 1
-]);
-}
-identity() {
-let e = this.elements;
-e[0] = 1; e[4] = 0; e[8] = 0; e[12] = 0;
-e[1] = 0; e[5] = 1; e[9] = 0; e[13] = 0;
-e[2] = 0; e[6] = 0; e[10] = 1; e[14] = 0;
-e[3] = 0; e[7] = 0; e[11] = 0; e[15] = 1;
-return this;
-}
-copy(m) {
-let te = this.elements, me = m.elements;
-for (let i = 0; i < 16; i++) te[i] = me[i];
-return this;
-}
-invert() {
-let te = this.elements;
-let n11 = te[0], n21 = te[1], n31 = te[2], n41 = te[3];
-let n12 = te[4], n22 = te[5], n32 = te[6], n42 = te[7];
-let n13 = te[8], n23 = te[9], n33 = te[10], n43 = te[11];
-let n14 = te[12], n24 = te[13], n34 = te[14], n44 = te[15];
-let t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44;
-let t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44;
-let t13 = n13 * n24 * n42 - n14 * n23 * n42 + n14 * n22 * n43 - n12 * n24 * n43 - n13 * n22 * n44 + n12 * n23 * n44;
-let t14 = n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34;
-let det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
-if (det === 0) return this.identity();
-let detInv = 1 / det;
-te[0] = t11 * detInv; te[4] = t12 * detInv; te[8] = t13 * detInv; te[12] = t14 * detInv;
-te[1] = (n24 * n33 * n41 - n23 * n34 * n41 - n24 * n31 * n43 + n21 * n34 * n43 + n23 * n31 * n44 - n21 * n33 * n44) * detInv;
-te[5] = (n13 * n34 * n41 - n14 * n33 * n41 + n14 * n31 * n43 - n11 * n34 * n43 - n13 * n31 * n44 + n11 * n33 * n44) * detInv;
-te[9] = (n14 * n23 * n41 - n13 * n24 * n41 - n14 * n21 * n43 + n11 * n24 * n43 + n13 * n21 * n44 - n11 * n23 * n44) * detInv;
-te[13] = (n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34) * detInv;
-te[2] = (n22 * n34 * n41 - n24 * n32 * n41 + n24 * n31 * n42 - n21 * n34 * n42 - n22 * n31 * n44 + n21 * n32 * n44) * detInv;
-te[6] = (n14 * n32 * n41 - n12 * n34 * n41 - n14 * n31 * n42 + n11 * n34 * n42 + n12 * n31 * n44 - n11 * n32 * n44) * detInv;
-te[10] = (n12 * n24 * n41 - n14 * n22 * n41 + n14 * n21 * n42 - n11 * n24 * n42 - n12 * n21 * n44 + n11 * n22 * n44) * detInv;
-te[14] = (n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34) * detInv;
-te[3] = (n23 * n32 * n41 - n22 * n33 * n41 - n23 * n31 * n42 + n21 * n33 * n42 + n22 * n31 * n43 - n21 * n32 * n43) * detInv;
-te[7] = (n12 * n33 * n41 - n13 * n32 * n41 + n13 * n31 * n42 - n11 * n33 * n42 - n12 * n31 * n43 + n11 * n32 * n43) * detInv;
-te[11] = (n13 * n22 * n41 - n12 * n23 * n41 - n13 * n21 * n42 + n11 * n23 * n42 + n12 * n21 * n43 - n11 * n22 * n43) * detInv;
-te[15] = (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n43 + n11 * n22 * n33) * detInv;
-return this;
-}
-perspective(fov, aspect, near, far) {
-let ymax = near * Math.tan(fov * Math.PI / 360);
-let ymin = -ymax;
-let xmin = ymin * aspect;
-let xmax = ymax * aspect;
-let x = (2 * near) / (xmax - xmin);
-let y = (2 * near) / (ymax - ymin);
-let a = (xmax + xmin) / (xmax - xmin);
-let b = (ymax + ymin) / (ymax - ymin);
-let c = -(far + near) / (far - near);
-let d = -(2 * far * near) / (far - near);
-let te = this.elements;
-te[0] = x; te[4] = 0; te[8] = a; te[12] = 0;
-te[1] = 0; te[5] = y; te[9] = b; te[13] = 0;
-te[2] = 0; te[6] = 0; te[10] = c; te[14] = d;
-te[3] = 0; te[7] = 0; te[11] = -1; te[15] = 0;
-return this;
-}
-lookAt(eye, target, up) {
-let z = new Vector3().subVectors(eye, target).normalize();
-if (z.lengthSq() === 0) z.z = 1;
-let x = new Vector3().crossVectors(up, z).normalize();
-if (x.lengthSq() === 0) {
-if (Math.abs(up.z) === 1) z.x += 0.0001;
-else z.z += 0.0001;
-z.normalize();
-x.crossVectors(up, z).normalize();
-}
-let y = new Vector3().crossVectors(z, x);
-let te = this.elements;
-te[0] = x.x; te[4] = y.x; te[8] = z.x; te[12] = eye.x;
-te[1] = x.y; te[5] = y.y; te[9] = z.y; te[13] = eye.y;
-te[2] = x.z; te[6] = y.z; te[10] = z.z; te[14] = eye.z;
-te[3] = 0; te[7] = 0; te[11] = 0; te[15] = 1;
-return this.invert();
-}
+    constructor(){ this.elements=new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]); }
+    identity(){ let e=this.elements; e[0]=1;e[4]=0;e[8]=0;e[12]=0; e[1]=0;e[5]=1;e[9]=0;e[13]=0; e[2]=0;e[6]=0;e[10]=1;e[14]=0; e[3]=0;e[7]=0;e[11]=0;e[15]=1; return this;}
+    copy(m){ for(let i=0;i<16;i++)this.elements[i]=m.elements[i]; return this; }
+    invert(){
+        let te=this.elements, n11=te[0],n21=te[1],n31=te[2],n41=te[3], n12=te[4],n22=te[5],n32=te[6],n42=te[7], n13=te[8],n23=te[9],n33=te[10],n43=te[11], n14=te[12],n24=te[13],n34=te[14],n44=te[15];
+        let t11=n23*n34*n42-n24*n33*n42+n24*n32*n43-n22*n34*n43-n23*n32*n44+n22*n33*n44;
+        let t12=n14*n33*n42-n13*n34*n42-n14*n32*n43+n12*n34*n43+n13*n32*n44-n12*n33*n44;
+        let t13=n13*n24*n42-n14*n23*n42+n14*n22*n43-n12*n24*n43-n13*n22*n44+n12*n23*n44;
+        let t14=n14*n23*n32-n13*n24*n32-n14*n22*n33+n12*n24*n33+n13*n22*n34-n12*n23*n34;
+        let det=n11*t11+n21*t12+n31*t13+n41*t14;
+        if(det===0)return this.identity();
+        let dI=1/det;
+        te[0]=t11*dI; te[4]=t12*dI; te[8]=t13*dI; te[12]=t14*dI;
+        te[1]=(n24*n33*n41-n23*n34*n41-n24*n31*n43+n21*n34*n43+n23*n31*n44-n21*n33*n44)*dI;
+        te[5]=(n13*n34*n41-n14*n33*n41+n14*n31*n43-n11*n34*n43-n13*n31*n44+n11*n33*n44)*dI;
+        te[9]=(n14*n23*n41-n13*n24*n41-n14*n21*n43+n11*n24*n43+n13*n21*n44-n11*n23*n44)*dI;
+        te[13]=(n13*n24*n31-n14*n23*n31+n14*n21*n33-n11*n24*n33-n13*n21*n34+n11*n23*n34)*dI;
+        te[2]=(n22*n34*n41-n24*n32*n41+n24*n31*n42-n21*n34*n42-n22*n31*n44+n21*n32*n44)*dI;
+        te[6]=(n14*n32*n41-n12*n34*n41-n14*n31*n42+n11*n34*n42+n12*n31*n44-n11*n32*n44)*dI;
+        te[10]=(n12*n24*n41-n14*n22*n41+n14*n21*n42-n11*n24*n42-n12*n21*n44+n11*n22*n44)*dI;
+        te[14]=(n14*n22*n31-n12*n24*n31-n14*n21*n32+n11*n24*n32+n12*n21*n34-n11*n22*n34)*dI;
+        te[3]=(n23*n32*n41-n22*n33*n41-n23*n31*n42+n21*n33*n42+n22*n31*n43-n21*n32*n43)*dI;
+        te[7]=(n12*n33*n41-n13*n32*n41+n13*n31*n42-n11*n33*n42-n12*n31*n43+n11*n32*n43)*dI;
+        te[11]=(n13*n22*n41-n12*n23*n41-n13*n21*n42+n11*n23*n42+n12*n21*n43-n11*n22*n43)*dI;
+        te[15]=(n12*n23*n31-n13*n22*n31+n13*n21*n32-n11*n23*n32-n12*n21*n43+n11*n22*n33)*dI;
+        return this;
+    }
+    perspective(fov, aspect, near, far){
+        let ymax=near*Math.tan(fov*Math.PI/360), ymin=-ymax, xmin=ymin*aspect, xmax=ymax*aspect;
+        let x=(2*near)/(xmax-xmin), y=(2*near)/(ymax-ymin), a=(xmax+xmin)/(xmax-xmin), b=(ymax+ymin)/(ymax-ymin), c=-(far+near)/(far-near), d=-(2*far*near)/(far-near);
+        let te=this.elements;
+        te[0]=x; te[4]=0; te[8]=a; te[12]=0;
+        te[1]=0; te[5]=y; te[9]=b; te[13]=0;
+        te[2]=0; te[6]=0; te[10]=c; te[14]=d;
+        te[3]=0; te[7]=0; te[11]=-1; te[15]=0;
+        return this;
+    }
+    lookAt(eye, target, up){
+        let z=new Vector3().subVectors(eye,target).normalize(); if(z.length()===0)z.z=1;
+        let x=new Vector3().crossVectors(up,z).normalize(); if(x.length()===0){z.x+=0.0001;z.normalize();x.crossVectors(up,z).normalize();}
+        let y=new Vector3().crossVectors(z,x);
+        let te=this.elements;
+        te[0]=x.x; te[4]=y.x; te[8]=z.x; te[12]=eye.x;
+        te[1]=x.y; te[5]=y.y; te[9]=z.y; te[13]=eye.y;
+        te[2]=x.z; te[6]=y.z; te[10]=z.z; te[14]=eye.z;
+        te[3]=0; te[7]=0; te[11]=0; te[15]=1;
+        return this.invert();
+    }
 }
 class Ray {
-constructor(origin = new Vector3(), direction = new Vector3(0, 0, -1)) {
-this.origin = origin;
-this.direction = direction;
-}
-at(t, target) { return target.copy(this.direction).multiplyScalar(t).add(this.origin); }
-intersectPlane(planeNormal, planeConstant, target) {
-let denominator = planeNormal.dot(this.direction);
-if (denominator === 0) return null;
-let t = -(this.origin.dot(planeNormal) - planeConstant) / denominator;
-if (t >= 0) return this.at(t, target);
-return null;
-}
+    constructor(o=new Vector3(), d=new Vector3(0,0,-1)){this.origin=o;this.direction=d;}
+    intersectPlane(planeNormal, planeConst, target){
+        let den=planeNormal.dot(this.direction);
+        if(den===0)return null;
+        let t=-(this.origin.dot(planeNormal)-planeConst)/den;
+        if(t>=0) return target.copy(this.direction).multiplyScalar(t).add(this.origin);
+        return null;
+    }
 }
 
+/* ============================================================================
+   WEBGL SHADERS - ENGINE VISUAL
+   ============================================================================ */
 const canvas = document.getElementById('c');
-const gl = canvas.getContext('webgl', { alpha: false, antialias: true, depth: true });
+const gl = canvas.getContext('webgl', { antialias: true, depth: true });
+
+// VERTEX SHADER: Processa a Altura, Temperatura e Tipo de Material
 const vShaderSource = `
 attribute vec3 position;
 attribute vec3 normal;
+attribute float temperature;
+attribute float material; // 0=Agua, 1=Gelo, 2=Oleo, 3=Pedra, 4=Acido
+
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
+
 varying vec3 vNormal;
 varying vec3 vPosition;
+varying float vTemp;
+varying float vMat;
+
 void main() {
-vec4 worldPosition = model * vec4(position, 1.0);
-vPosition = worldPosition.xyz;
-vNormal = mat3(model) * normal;
-gl_Position = projection * view * worldPosition;
+    vec4 worldPosition = model * vec4(position, 1.0);
+    vPosition = worldPosition.xyz;
+    vNormal = mat3(model) * normal;
+    vTemp = temperature;
+    vMat = material;
+    gl_Position = projection * view * worldPosition;
 }
 `;
-// Fragment Shader Turbinado: Cores com base na "Temperatura" e Altura
+
+// FRAGMENT SHADER: Iluminação, Renderização Térmica e Cores de Materiais
 const fShaderSource = `
 precision highp float;
 varying vec3 vNormal;
 varying vec3 vPosition;
+varying float vTemp;
+varying float vMat;
+
 uniform vec3 cameraPosition;
 uniform float time;
-void main() {
-vec3 n = normalize(vNormal);
-vec3 l = normalize(vec3(0.5, 1.0, 0.5));
-vec3 v = normalize(cameraPosition - vPosition);
-vec3 h_vec = normalize(l + v);
+uniform int thermalMode;
 
-float diffuse = max(dot(n, l), 0.0);
-float specular = pow(max(dot(n, h_vec), 0.0), 120.0);
-float fresnel = pow(1.0 - max(dot(n, v), 0.0), 4.0);
-
-// Temperaturas e Cores dinâmicas pela altura (vPosition.y)
-vec3 deepColdWater = vec3(0.0, 0.1, 0.4); 
-vec3 shallowNormalWater = vec3(0.0, 0.6, 0.9);
-vec3 hotMagmaWater = vec3(1.0, 0.3, 0.0); 
-vec3 foamWhite = vec3(0.9, 0.95, 1.0);
-
-vec3 baseColor;
-float heightVal = vPosition.y;
-
-if(heightVal > 1.0) {
-    // Topo das ondas / Trombas - Frio / Espuma
-    baseColor = mix(shallowNormalWater, foamWhite, clamp((heightVal - 1.0) * 0.4, 0.0, 1.0));
-} else if(heightVal < -1.5) {
-    // Fundo extremo do redemoinho - Quente / Magma
-    baseColor = mix(deepColdWater, hotMagmaWater, clamp((-heightVal - 1.5) * 0.3, 0.0, 1.0));
-} else {
-    // Água padrão
-    float t = clamp((heightVal + 1.5) / 2.5, 0.0, 1.0);
-    baseColor = mix(deepColdWater, shallowNormalWater, t);
+// Mapa de Calor (Visão Térmica)
+vec3 getThermalColor(float t) {
+    float norm = clamp(t / 100.0, 0.0, 1.0);
+    vec3 c1 = vec3(0.0, 0.0, 0.5); // Frio profundo
+    vec3 c2 = vec3(0.0, 1.0, 0.0); // Ambiente
+    vec3 c3 = vec3(1.0, 1.0, 0.0); // Quente
+    vec3 c4 = vec3(1.0, 0.0, 0.0); // Fervendo
+    vec3 c5 = vec3(1.0, 1.0, 1.0); // Extremo
+    
+    if(norm < 0.25) return mix(c1, c2, norm / 0.25);
+    else if(norm < 0.5) return mix(c2, c3, (norm - 0.25) / 0.25);
+    else if(norm < 0.75) return mix(c3, c4, (norm - 0.5) / 0.25);
+    else return mix(c4, c5, (norm - 0.75) / 0.25);
 }
 
-baseColor = baseColor * (diffuse * 0.7 + 0.3);
-vec3 finalColor = baseColor + specular * vec3(1.0, 1.0, 1.0);
-finalColor = mix(finalColor, vec3(0.8, 0.95, 1.0), fresnel * 0.6);
+void main() {
+    vec3 n = normalize(vNormal);
+    vec3 l = normalize(vec3(0.5, 1.0, 0.5));
+    vec3 v = normalize(cameraPosition - vPosition);
+    vec3 h_vec = normalize(l + v);
 
-gl_FragColor = vec4(finalColor, 1.0);
+    float diffuse = max(dot(n, l), 0.0);
+    float specPower = 120.0;
+    float specIntensity = 1.0;
+    
+    // Cores Base por Material
+    vec3 matColor = vec3(0.0, 0.6, 0.9); // Água normal
+    
+    if(vMat > 2.5 && vMat < 3.5) { 
+        // Pedra
+        matColor = vec3(0.3, 0.3, 0.35); 
+        specPower = 10.0; specIntensity = 0.1;
+    } else if(vMat > 1.5 && vMat < 2.5) {
+        // Óleo
+        matColor = vec3(0.1, 0.1, 0.05); 
+        specPower = 200.0; // Muito reflexivo
+    } else if(vMat > 0.5 && vMat < 1.5) {
+        // Gelo
+        matColor = vec3(0.8, 0.9, 1.0);
+        specPower = 50.0;
+    } else if(vMat > 3.5) {
+        // Ácido
+        matColor = vec3(0.2, 1.0, 0.2);
+    } else {
+        // Bioluminescência Mágica (Surpresa)
+        // Se a água for fria (<15) e estiver se movendo alto/baixo
+        if(vTemp < 15.0 && abs(vPosition.y) > 0.5) {
+            matColor = mix(matColor, vec3(0.0, 1.0, 0.8), clamp(abs(vPosition.y)*0.5, 0.0, 1.0));
+        }
+    }
+
+    float specular = pow(max(dot(n, h_vec), 0.0), specPower) * specIntensity;
+    float fresnel = pow(1.0 - max(dot(n, v), 0.0), 4.0);
+
+    vec3 finalColor = matColor * (diffuse * 0.7 + 0.3) + specular;
+    if(vMat < 2.5 && vMat != 1.0) { // Mistura fresnel se não for pedra
+        finalColor = mix(finalColor, vec3(0.8, 0.95, 1.0), fresnel * 0.5);
+    }
+
+    // Modo Câmera Térmica Sobrescreve tudo
+    if(thermalMode == 1) {
+        finalColor = getThermalColor(vTemp);
+        // Mantém shading leve no termal
+        finalColor *= (diffuse * 0.5 + 0.5);
+    }
+
+    gl_FragColor = vec4(finalColor, 1.0);
 }
 `;
 
 function compileShader(type, source) {
-let shader = gl.createShader(type);
-gl.shaderSource(shader, source);
-gl.compileShader(shader);
-return shader;
+    let s = gl.createShader(type);
+    gl.shaderSource(s, source); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+    return s;
 }
-const vertexShader = compileShader(gl.VERTEX_SHADER, vShaderSource);
-const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fShaderSource);
+
 const program = gl.createProgram();
-gl.attachShader(program, vertexShader);
-gl.attachShader(program, fragmentShader);
-gl.linkProgram(program);
-gl.useProgram(program);
+gl.attachShader(program, compileShader(gl.VERTEX_SHADER, vShaderSource));
+gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, fShaderSource));
+gl.linkProgram(program); gl.useProgram(program);
 
-const posLocation = gl.getAttribLocation(program, "position");
-const normLocation = gl.getAttribLocation(program, "normal");
-const projLocation = gl.getUniformLocation(program, "projection");
-const viewLocation = gl.getUniformLocation(program, "view");
-const modelLocation = gl.getUniformLocation(program, "model");
-const camLocation = gl.getUniformLocation(program, "cameraPosition");
-const timeLocation = gl.getUniformLocation(program, "time");
+// Localizações Uniformes e Atributos
+const loc = {
+    pos: gl.getAttribLocation(program, "position"),
+    norm: gl.getAttribLocation(program, "normal"),
+    temp: gl.getAttribLocation(program, "temperature"),
+    mat: gl.getAttribLocation(program, "material"),
+    proj: gl.getUniformLocation(program, "projection"),
+    view: gl.getUniformLocation(program, "view"),
+    model: gl.getUniformLocation(program, "model"),
+    cam: gl.getUniformLocation(program, "cameraPosition"),
+    time: gl.getUniformLocation(program, "time"),
+    thermal: gl.getUniformLocation(program, "thermalMode")
+};
 
-const gridRes = 200;
-const simSize = 40;
-let positions = new Float32Array(gridRes * gridRes * 3);
-let normals = new Float32Array(gridRes * gridRes * 3);
+/* ============================================================================
+   GRID DE FÍSICA E TERMODINÂMICA
+   ============================================================================ */
+const gridRes = 200; // Alta resolução
+const simSize = 50;
+const numVerts = gridRes * gridRes;
+
+let positions = new Float32Array(numVerts * 3);
+let normals = new Float32Array(numVerts * 3);
+let temperatures = new Float32Array(numVerts);
+let materials = new Float32Array(numVerts); // 0:Agua, 1:Gelo, 2:Oleo, 3:Pedra, 4:Acido
 let indices = new Uint16Array((gridRes - 1) * (gridRes - 1) * 6);
-let heightA = new Float32Array(gridRes * gridRes);
-let heightB = new Float32Array(gridRes * gridRes);
-let velocities = new Float32Array(gridRes * gridRes);
 
+// Buffers de Física
+let heightA = new Float32Array(numVerts);
+let heightB = new Float32Array(numVerts);
+let velocities = new Float32Array(numVerts);
+
+// Variáveis Globais de Estado
+let globalWaterLevel = 0;
+let ambientTemp = 25;
+let gravityX = 0, gravityY = 0;
+let globalTime = 0;
+
+// Setup Inicial
 for (let i = 0; i < gridRes; i++) {
-for (let j = 0; j < gridRes; j++) {
-let index = i + j * gridRes;
-positions[index * 3] = (i / (gridRes - 1) - 0.5) * simSize;
-positions[index * 3 + 1] = 0;
-positions[index * 3 + 2] = (j / (gridRes - 1) - 0.5) * simSize;
-normals[index * 3] = 0; normals[index * 3 + 1] = 1; normals[index * 3 + 2] = 0;
-heightA[index] = 0; heightB[index] = 0; velocities[index] = 0;
-}
+    for (let j = 0; j < gridRes; j++) {
+        let idx = i + j * gridRes;
+        positions[idx*3]   = (i/(gridRes-1) - 0.5) * simSize;
+        positions[idx*3+1] = 0;
+        positions[idx*3+2] = (j/(gridRes-1) - 0.5) * simSize;
+        normals[idx*3+1]   = 1;
+        temperatures[idx]  = ambientTemp;
+        materials[idx]     = 0;
+    }
 }
 
 let iCount = 0;
 for (let i = 0; i < gridRes - 1; i++) {
-for (let j = 0; j < gridRes - 1; j++) {
-let a = i + gridRes * j;
-let b = i + gridRes * (j + 1);
-let c = (i + 1) + gridRes * (j + 1);
-let d = (i + 1) + gridRes * j;
-indices[iCount++] = a; indices[iCount++] = b; indices[iCount++] = c;
-indices[iCount++] = a; indices[iCount++] = c; indices[iCount++] = d;
-}
+    for (let j = 0; j < gridRes - 1; j++) {
+        let a = i + gridRes * j, b = i + gridRes * (j + 1), c = (i + 1) + gridRes * (j + 1), d = (i + 1) + gridRes * j;
+        indices[iCount++] = a; indices[iCount++] = b; indices[iCount++] = c;
+        indices[iCount++] = a; indices[iCount++] = c; indices[iCount++] = d;
+    }
 }
 
-const posBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_DRAW);
-const normBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, normBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, normals, gl.DYNAMIC_DRAW);
-const idxBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuffer);
-gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+// Criação de VBOs
+const buffers = {
+    pos: gl.createBuffer(), norm: gl.createBuffer(),
+    temp: gl.createBuffer(), mat: gl.createBuffer(), idx: gl.createBuffer()
+};
+const updateBuffer = (buf, data) => { gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW); };
+updateBuffer(buffers.pos, positions); updateBuffer(buffers.norm, normals);
+updateBuffer(buffers.temp, temperatures); updateBuffer(buffers.mat, materials);
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.idx); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
-let cameraPosition = new Vector3(0, 18, 25);
-let targetPosition = new Vector3(0, 0, 0);
-let upVector = new Vector3(0, 1, 0);
-let projMatrix = new Matrix4();
-let viewMatrix = new Matrix4();
-let modelMatrix = new Matrix4();
+// Matrizes
+let projMatrix = new Matrix4(), viewMatrix = new Matrix4(), modelMatrix = new Matrix4();
+let cameraPosition = new Vector3(0, 30, 40);
 
-function onWindowResize() {
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-gl.viewport(0, 0, canvas.width, canvas.height);
-projMatrix.perspective(45, canvas.width / canvas.height, 0.1, 300);
-}
-window.addEventListener('resize', onWindowResize);
-onWindowResize();
-gl.enable(gl.DEPTH_TEST);
-gl.clearColor(0.0, 0.05, 0.1, 1.0);
+/* ============================================================================
+   SISTEMAS ESPECIAIS (Ralo, Tromba d'água, Clima, etc)
+   ============================================================================ */
+let isDraining = false;
+let drainScale = 0;
+let trombaTimer = 0;
+let trombaActive = false;
+let rainActive = false;
+let activeTool = 'interact';
+let isThermal = false;
 
-// --- CORREÇÃO DO RAYCAST (TOQUE/CLIQUE) ---
-function getRayIntersect(clientX, clientY) {
-let rect = canvas.getBoundingClientRect();
-let x = clientX - rect.left;
-let y = clientY - rect.top;
-let ndcX = (x / rect.width) * 2 - 1;
-let ndcY = -(y / rect.height) * 2 + 1;
-
-let invProj = new Matrix4().copy(projMatrix).invert();
-let invView = new Matrix4().copy(viewMatrix).invert();
-
-// Projetamos 2 pontos: no plano perto (-1) e no longe (1) para pegar o vetor de direção perfeitamente
-let nearPt = new Vector3(ndcX, ndcY, -1).applyMatrix4(invProj).applyMatrix4(invView);
-let farPt = new Vector3(ndcX, ndcY, 1).applyMatrix4(invProj).applyMatrix4(invView);
-
-let rayDir = new Vector3().subVectors(farPt, nearPt).normalize();
-let ray = new Ray(cameraPosition, rayDir);
-let planeNormal = new Vector3(0, 1, 0);
-let intersectPoint = new Vector3();
-return ray.intersectPlane(planeNormal, 0, intersectPoint);
+// Alertas de UI
+function showAlert(text, duration=3000) {
+    const el = document.getElementById('event-alert');
+    el.innerText = text; el.style.opacity = 1;
+    setTimeout(() => el.style.opacity = 0, duration);
 }
 
-function applyForce(clientX, clientY, power) {
-let hit = getRayIntersect(clientX, clientY);
-if (!hit) return;
-let gridX = Math.floor(((hit.x / simSize) + 0.5) * gridRes);
-let gridY = Math.floor(((hit.z / simSize) + 0.5) * gridRes);
-let radius = Math.floor(Math.abs(power) * 1.5) + 3;
-if (radius > 15) radius = 15;
-for (let i = -radius; i <= radius; i++) {
-for (let j = -radius; j <= radius; j++) {
-let gx = gridX + i; let gy = gridY + j;
-if (gx >= 0 && gx < gridRes && gy >= 0 && gy < gridRes) {
-let dist = Math.sqrt(i * i + j * j);
-if (dist < radius) {
-let index = gx + gy * gridRes;
-let force = (power * 0.4) * (1.0 - dist / radius);
-velocities[index] -= force; // Empurra a água
-}
-}
-}
-}
+function toggleThermal() {
+    isThermal = !isThermal;
+    document.getElementById('btn-thermal').innerText = isThermal ? '🔥 Ativada' : 'Desativada';
+    document.getElementById('btn-thermal').classList.toggle('active', isThermal);
 }
 
-let touchActive = false;
-let lastTouchX = 0, lastTouchY = 0;
-canvas.addEventListener('mousedown', e => { touchActive = true; lastTouchX = e.clientX; lastTouchY = e.clientY; applyForce(e.clientX, e.clientY, 4); });
-canvas.addEventListener('mousemove', e => { if (!touchActive) return; let speed = Math.sqrt((e.clientX - lastTouchX)**2 + (e.clientY - lastTouchY)**2); if (speed > 0) applyForce(e.clientX, e.clientY, speed * 0.15); lastTouchX = e.clientX; lastTouchY = e.clientY; });
-canvas.addEventListener('mouseup', () => { touchActive = false; });
-canvas.addEventListener('touchstart', e => { touchActive = true; lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY; applyForce(lastTouchX, lastTouchY, 5); });
-canvas.addEventListener('touchmove', e => { if (!touchActive) return; let tx = e.touches[0].clientX, ty = e.touches[0].clientY; let speed = Math.sqrt((tx - lastTouchX)**2 + (ty - lastTouchY)**2); if (speed > 0) applyForce(tx, ty, speed * 0.2); lastTouchX = tx; lastTouchY = ty; });
-canvas.addEventListener('touchend', () => { touchActive = false; });
+function toggleRain() {
+    rainActive = !rainActive;
+    document.getElementById('btn-rain').innerText = rainActive ? '🌧️ Chuva: ON' : '🌧️ Chuva: OFF';
+    document.getElementById('btn-rain').classList.toggle('active', rainActive);
+}
 
-// --- SENSORES (GIRAR E BALANÇAR) ---
-let isSpinning = false;
-let lastAlpha = 0;
-let permissionBtn = document.getElementById('startBtn');
+function setTool(t) {
+    activeTool = t;
+    document.querySelectorAll('#sandbox-menu .btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('thermal-hud').style.display = (t==='info') ? 'block' : 'none';
+}
 
-permissionBtn.addEventListener('click', () => {
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+function triggerDrain() {
+    if(isDraining) return;
+    isDraining = true; drainScale = 0;
+    showAlert("🌪️ ALERTA: RALO ABERTO! DRENANDO TUDO...", 5000);
+}
+
+/* ============================================================================
+   LÓGICA DO MOTOR DE FÍSICA (CPU)
+   ============================================================================ */
+function applyToolAt(gridX, gridY, tool, powerStr) {
+    let power = parseFloat(document.getElementById('sl-force').value) * 0.1;
+    let radius = 4;
+    
+    for (let i = -radius; i <= radius; i++) {
+        for (let j = -radius; j <= radius; j++) {
+            let gx = gridX + i, gy = gridY + j;
+            if (gx >= 1 && gx < gridRes-1 && gy >= 1 && gy < gridRes-1) {
+                let dist = Math.sqrt(i*i + j*j);
+                if (dist <= radius) {
+                    let idx = gx + gy * gridRes;
+                    let intensity = 1.0 - (dist/radius);
+                    
+                    if(tool === 'interact') {
+                        if(materials[idx] !== 3) velocities[idx] -= power * intensity;
+                    } else if(tool === 'water_cold') {
+                        materials[idx] = 0; temperatures[idx] = MathUtils.lerp(temperatures[idx], 5, intensity*0.5);
+                        velocities[idx] += 0.5 * intensity; // Sploosh
+                    } else if(tool === 'water_hot') {
+                        materials[idx] = 0; temperatures[idx] = MathUtils.lerp(temperatures[idx], 90, intensity*0.5);
+                        velocities[idx] += 0.5 * intensity;
+                    } else if(tool === 'ice') {
+                        materials[idx] = 1; temperatures[idx] = 0; heightA[idx] = globalWaterLevel + 0.5;
+                    } else if(tool === 'oil') {
+                        materials[idx] = 2; heightA[idx] = globalWaterLevel + 0.2;
+                    } else if(tool === 'stone') {
+                        materials[idx] = 3; heightA[idx] = 5.0; velocities[idx] = 0;
+                    } else if(tool === 'acid') {
+                        materials[idx] = 4; temperatures[idx] = 80;
+                    } else if(tool === 'gas_o2' || tool === 'gas_h2') {
+                        // Gás cria bolhas violentas
+                        velocities[idx] += (Math.random() * 2.0 - 1.0) * power * 2.0;
+                    } else if(tool === 'whirlpool') {
+                        // Cria giro forçado (feito no loop principal, aqui só marca)
+                        velocities[idx] -= 2.0 * intensity;
+                    }
+                }
+            }
+        }
+    }
+}
+
+function physicsStep() {
+    let cx = gridRes/2, cy = gridRes/2;
+    globalWaterLevel = parseFloat(document.getElementById('sl-level').value);
+    ambientTemp = parseFloat(document.getElementById('sl-ambient').value);
+
+    // Chuva
+    if(rainActive && Math.random() < 0.2) {
+        let rx = Math.floor(Math.random()*gridRes), ry = Math.floor(Math.random()*gridRes);
+        if(rx>0 && rx<gridRes-1 && ry>0 && ry<gridRes-1) velocities[rx + ry*gridRes] -= 2.0;
+    }
+
+    // Cronômetro Tromba d'água (cada 120s, dura 10s)
+    let timeMs = performance.now();
+    let cycle = timeMs % 120000;
+    if (cycle < 10000 && !trombaActive) {
+        trombaActive = true; showAlert("⚠️ TROMBA D'ÁGUA DETECTADA!", 10000);
+    } else if (cycle >= 10000) { trombaActive = false; }
+
+    // Drenagem (Ralo)
+    if(isDraining) {
+        drainScale += 0.01;
+        if(drainScale > 5.0) { // Fim do ciclo de dreno: Resetar
+            isDraining = false; globalWaterLevel = 0; document.getElementById('sl-level').value = 0;
+            for(let i=0; i<numVerts; i++) { heightA[i]=0; velocities[i]=0; materials[i]=0; temperatures[i]=ambientTemp; }
+            showAlert("Sistema reiniciado.", 3000);
+        }
+    }
+
+    // UPDATE PRINCIPAL DA GRID
+    for (let i = 1; i < gridRes - 1; i++) {
+        for (let j = 1; j < gridRes - 1; j++) {
+            let idx = i + j * gridRes;
+            let mat = materials[idx];
+
+            // Pedras não se movem
+            if (mat === 3) {
+                heightB[idx] = 5.0; 
+                // Ácido corrói pedra!
+                if(materials[idx+1]==4 || materials[idx-1]==4 || materials[idx+gridRes]==4) {
+                    if(Math.random()<0.05) materials[idx] = 0; // Pedra vira água
+                }
+                continue;
+            }
+
+            // Equação da Onda (Média dos 4 vizinhos)
+            let neighborAvg = (heightA[idx - 1] + heightA[idx + 1] + heightA[idx - gridRes] + heightA[idx + gridRes]) * 0.25;
+            
+            // Adiciona Gravidade Direcional (Inclinando Celular)
+            let gravOffset = 0;
+            if (gravityX !== 0) gravOffset += (heightA[idx + (gravityX>0?1:-1)] - heightA[idx]) * Math.abs(gravityX) * 0.1;
+            if (gravityY !== 0) gravOffset += (heightA[idx + (gravityY>0?gridRes:-gridRes)] - heightA[idx]) * Math.abs(gravityY) * 0.1;
+
+            velocities[idx] += (neighborAvg - heightA[idx] + gravOffset) * 0.98;
+            
+            // Viscosidade/Amortecimento baseado no material
+            let damping = 0.985;
+            if(mat === 2) damping = 0.95; // Óleo é mais lento
+            if(mat === 1) damping = 0.80; // Gelo quase não mexe
+            velocities[idx] *= damping;
+
+            // Restaura nível base lentamente
+            velocities[idx] += (globalWaterLevel - heightA[idx]) * 0.01;
+
+            // Termodinâmica (Transferência de Calor e Mudança de Estado)
+            let tempAvg = (temperatures[idx-1] + temperatures[idx+1] + temperatures[idx-gridRes] + temperatures[idx+gridRes]) * 0.25;
+            temperatures[idx] = MathUtils.lerp(temperatures[idx], tempAvg, 0.05); // Calor se espalha
+            temperatures[idx] = MathUtils.lerp(temperatures[idx], ambientTemp, 0.001); // Retorna ao ambiente
+            
+            // Gelo derrete se temp > 5
+            if(mat === 1 && temperatures[idx] > 5) {
+                if(Math.random() < 0.01) materials[idx] = 0; // Derreteu
+            }
+            // Água ferve se temp > 95
+            if(mat === 0 && temperatures[idx] > 95) {
+                if(Math.random() < 0.1) velocities[idx] += 0.5; // Fervura/Bolhas
+            }
+
+            // RALO LOGIC (Redemoinho no centro)
+            let dx = i - cx, dy = j - cy;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            if(isDraining) {
+                let dRadius = 150 * (drainScale/5.0);
+                if(dist < dRadius) {
+                    let angle = Math.atan2(dy, dx);
+                    velocities[idx] -= Math.sin(dist*0.5 - globalTime*20.0 + angle*2.0) * 0.1; // Gira
+                    velocities[idx] -= 0.05; // Puxa pra baixo
+                    if(dist < 10) velocities[idx] -= 1.0; // Buraco negro
+                }
+            }
+
+            // TROMBA D'ÁGUA
+            if(trombaActive) {
+                let tx = cx + Math.sin(globalTime*2)*30, ty = cy + Math.cos(globalTime*1.5)*30;
+                let tdx = i - tx, tdy = j - ty;
+                let tDist = Math.sqrt(tdx*tdx + tdy*tdy);
+                if(tDist < 15) {
+                    velocities[idx] += 0.2 * (15-tDist); // Puxa pra cima
+                    velocities[idx] += Math.sin(globalTime*30 + Math.atan2(tdy,tdx)*4) * 0.2; // Gira
+                }
+            }
+
+            // FUNIL DE PEDRAS (Vortex Generator)
+            // Se a água estiver passando rápido entre pedras
+            if(mat === 0 && (materials[idx-1]===3 || materials[idx+1]===3)) {
+                if(Math.abs(velocities[idx]) > 0.5 && Math.random()<0.05) {
+                    velocities[idx] -= 1.5; // Cria depressão súbita (mini vortex)
+                }
+            }
+
+            heightB[idx] = heightA[idx] + velocities[idx];
+        }
+    }
+
+    // Swap buffers & update attributes
+    for (let i = 0; i < numVerts; i++) {
+        heightA[i] = heightB[i];
+        positions[i*3+1] = heightA[i];
+    }
+
+    // Calcula Normais para o Shading
+    let vX = new Vector3(), vZ = new Vector3(), n = new Vector3();
+    for (let i = 1; i < gridRes - 1; i++) {
+        for (let j = 1; j < gridRes - 1; j++) {
+            let idx = i + j * gridRes;
+            vX.set(2.0*simSize/gridRes, heightA[idx+1]-heightA[idx-1], 0);
+            vZ.set(0, heightA[idx+gridRes]-heightA[idx-gridRes], 2.0*simSize/gridRes);
+            n.crossVectors(vZ, vX).normalize();
+            normals[idx*3] = n.x; normals[idx*3+1] = n.y; normals[idx*3+2] = n.z;
+        }
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.pos); gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.norm); gl.bufferSubData(gl.ARRAY_BUFFER, 0, normals);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.temp); gl.bufferSubData(gl.ARRAY_BUFFER, 0, temperatures);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.mat); gl.bufferSubData(gl.ARRAY_BUFFER, 0, materials);
+}
+
+/* ============================================================================
+   CONTROLES E SENSORES
+   ============================================================================ */
+function getIntersectXY(clientX, clientY) {
+    let rect = canvas.getBoundingClientRect();
+    let x = (clientX - rect.left) / rect.width * 2 - 1;
+    let y = -(clientY - rect.top) / rect.height * 2 + 1;
+
+    let invProj = new Matrix4().copy(projMatrix).invert();
+    let invView = new Matrix4().copy(viewMatrix).invert();
+    let nearPt = new Vector3(x, y, -1).applyMatrix4(invProj).applyMatrix4(invView);
+    let farPt = new Vector3(x, y, 1).applyMatrix4(invProj).applyMatrix4(invView);
+    let rayDir = new Vector3().subVectors(farPt, nearPt).normalize();
+    
+    let hit = new Ray(cameraPosition, rayDir).intersectPlane(new Vector3(0,1,0), 0, new Vector3());
+    if(!hit) return null;
+    return {
+        x: Math.floor(((hit.x/simSize)+0.5)*gridRes),
+        y: Math.floor(((hit.z/simSize)+0.5)*gridRes)
+    };
+}
+
+let isPointerDown = false;
+function handlePointerEvent(e) {
+    let pt = (e.touches && e.touches.length > 0) ? e.touches[0] : e;
+    let gridPt = getIntersectXY(pt.clientX, pt.clientY);
+    if(!gridPt) return;
+    
+    if(activeTool === 'info') {
+        let idx = MathUtils.clamp(gridPt.x,0,gridRes-1) + MathUtils.clamp(gridPt.y,0,gridRes-1)*gridRes;
+        document.getElementById('thermal-hud').innerText = temperatures[idx].toFixed(1) + " °C";
+    } else {
+        applyToolAt(gridPt.x, gridPt.y, activeTool, 5);
+    }
+}
+
+canvas.addEventListener('mousedown', e => { isPointerDown=true; handlePointerEvent(e); });
+canvas.addEventListener('mousemove', e => { if(isPointerDown) handlePointerEvent(e); });
+window.addEventListener('mouseup', () => { isPointerDown=false; });
+canvas.addEventListener('touchstart', e => { isPointerDown=true; handlePointerEvent(e); });
+canvas.addEventListener('touchmove', e => { if(isPointerDown) handlePointerEvent(e); });
+window.addEventListener('touchend', () => { isPointerDown=false; });
+
+// ACELERÔMETRO (Gravidade)
+document.getElementById('startBtn').addEventListener('click', function() {
+    this.style.display = 'none';
+    if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission().then(res => {
-            if(res === 'granted') initSensors();
+            if(res==='granted') window.addEventListener('deviceorientation', handleOrientation);
         }).catch(console.error);
-    } else { initSensors(); }
-    permissionBtn.style.display = 'none';
-});
-
-function initSensors() {
-    window.addEventListener('deviceorientation', (e) => {
-        if(e.alpha !== null) {
-            let diff = Math.abs(e.alpha - lastAlpha);
-            if(diff > 3 && diff < 300) isSpinning = true; // Se girar, ativa redemoinho
-            lastAlpha = e.alpha;
-        }
-    });
-    window.addEventListener('devicemotion', (e) => {
-        let acc = e.accelerationIncludingGravity;
-        if(acc) {
-            let force = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
-            if(force > 20) isSpinning = false; // Se balançar/chacoalhar, para o redemoinho
-        }
-    });
-}
-
-// --- VARIÁVEIS DE CAOS RANDÔMICO ---
-let globalTime = 0;
-let giantWhirlpoolTimer = 0;
-let waterspouts = [{x: 100, y: 100, active: false}, {x: 50, y: 150, active: false}];
-
-function stepSimulation() {
-let cx = gridRes / 2; let cy = gridRes / 2;
-
-// Chance de nascer um redemoinho gigante randômico
-if (Math.random() < 0.0005 && giantWhirlpoolTimer <= 0) giantWhirlpoolTimer = 400;
-
-// Chance de nascer tromba d'água
-waterspouts.forEach(ws => {
-    if (Math.random() < 0.002) ws.active = !ws.active;
-    if (ws.active) {
-        ws.x += (Math.random() - 0.5) * 3;
-        ws.y += (Math.random() - 0.5) * 3;
-        ws.x = MathUtils.clamp(ws.x, 20, gridRes-20);
-        ws.y = MathUtils.clamp(ws.y, 20, gridRes-20);
+    } else {
+        window.addEventListener('deviceorientation', handleOrientation);
     }
 });
 
-for (let i = 1; i < gridRes - 1; i++) {
-for (let j = 1; j < gridRes - 1; j++) {
-let index = i + j * gridRes;
-let average = (heightA[index - 1] + heightA[index + 1] + heightA[index - gridRes] + heightA[index + gridRes]) * 0.25;
-velocities[index] += (average - heightA[index]) * 0.96;
-velocities[index] *= 0.985; // Amortecimento da onda
-
-let dx = i - cx; let dy = j - cy;
-let dist = Math.sqrt(dx * dx + dy * dy);
-
-// 1. Redemoinho do Usuário (só aparece se 'isSpinning' for true)
-if (isSpinning && dist < 30) {
-let angle = Math.atan2(dy, dx);
-let spiral = Math.sin(dist * 0.4 - globalTime * 8.0 + angle * 2.0);
-let intensity = (30 - dist) / 30;
-velocities[index] -= spiral * intensity * 0.06;
-if (dist < 5) velocities[index] -= 0.15 * (5 - dist);
+function handleOrientation(e) {
+    if(e.gamma === null) return;
+    // Map tilt to force vector
+    gravityX = MathUtils.clamp(e.gamma / 45, -1, 1) * 2.0; // Left/Right
+    gravityY = MathUtils.clamp(e.beta / 45, -1, 1) * 2.0;  // Front/Back
 }
 
-// 2. Trombas de Água (Puxa pra cima)
-waterspouts.forEach(ws => {
-    if(ws.active) {
-        let wdx = i - ws.x; let wdy = j - ws.y;
-        let wDist = Math.sqrt(wdx*wdx + wdy*wdy);
-        if(wDist < 8) {
-            velocities[index] += 0.08 * (8 - wDist); // Puxa pra cima brutalmente
-            velocities[index] += Math.sin(globalTime * 15 + Math.atan2(wdy, wdx) * 3) * 0.05; // Gira a tromba
-        }
-    }
-});
-
-// 3. Megaredemoinho Randômico do Nada
-if (giantWhirlpoolTimer > 0) {
-    if (dist < 70) {
-        let intensity = (70 - dist) / 70;
-        let angle = Math.atan2(dy, dx);
-        let spiral = Math.sin(dist * 0.2 - globalTime * 12.0 + angle * 3.0);
-        // Multiplica pelo tempo pra fazer um fade-in / fade-out
-        let fade = Math.min(giantWhirlpoolTimer / 100, 1.0); 
-        velocities[index] -= spiral * intensity * 0.15 * fade;
-        if (dist < 10) velocities[index] -= 0.3 * (10 - dist) * fade;
-    }
+/* ============================================================================
+   RENDER LOOP
+   ============================================================================ */
+function resize() {
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    projMatrix.perspective(45, canvas.width/canvas.height, 0.1, 200);
 }
+window.addEventListener('resize', resize); resize();
+gl.enable(gl.DEPTH_TEST); gl.clearColor(0.02, 0.05, 0.1, 1.0);
 
-heightB[index] = heightA[index] + velocities[index];
+function render() {
+    physicsStep();
+    globalTime += 0.016;
+
+    // Rotação suave da câmera
+    cameraPosition.x = Math.sin(globalTime*0.1) * 15;
+    cameraPosition.z = 35 + Math.cos(globalTime*0.1) * 5;
+    cameraPosition.y = 25; // Altura
+    viewMatrix.lookAt(cameraPosition, new Vector3(0,0,0), new Vector3(0,1,0));
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.useProgram(program);
+
+    gl.uniformMatrix4fv(loc.proj, false, projMatrix.elements);
+    gl.uniformMatrix4fv(loc.view, false, viewMatrix.elements);
+    gl.uniformMatrix4fv(loc.model, false, modelMatrix.elements);
+    gl.uniform3f(loc.cam, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    gl.uniform1f(loc.time, globalTime);
+    gl.uniform1i(loc.thermal, isThermal ? 1 : 0);
+
+    const bindAttrib = (location, buffer, size) => {
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(location);
+    };
+
+    bindAttrib(loc.pos, buffers.pos, 3);
+    bindAttrib(loc.norm, buffers.norm, 3);
+    bindAttrib(loc.temp, buffers.temp, 1);
+    bindAttrib(loc.mat, buffers.mat, 1);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.idx);
+    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+
+    requestAnimationFrame(render);
 }
-}
-if(giantWhirlpoolTimer > 0) giantWhirlpoolTimer--;
-
-for (let i = 0; i < heightA.length; i++) {
-heightA[i] = heightB[i];
-positions[i * 3 + 1] = heightA[i];
-}
-
-let vX = new Vector3(), vZ = new Vector3(), n = new Vector3();
-for (let i = 1; i < gridRes - 1; i++) {
-for (let j = 1; j < gridRes - 1; j++) {
-let index = i + j * gridRes;
-vX.set(2.0 * simSize / gridRes, heightA[index + 1] - heightA[index - 1], 0.0);
-vZ.set(0.0, heightA[index + gridRes] - heightA[index - gridRes], 2.0 * simSize / gridRes);
-n.crossVectors(vZ, vX).normalize();
-normals[index * 3] = n.x; normals[index * 3 + 1] = n.y; normals[index * 3 + 2] = n.z;
-}
-}
-gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions);
-gl.bindBuffer(gl.ARRAY_BUFFER, normBuffer);
-gl.bufferSubData(gl.ARRAY_BUFFER, 0, normals);
-}
-
-function animate() {
-stepSimulation();
-stepSimulation(); // Duplo step pra ficar mais dinâmico
-globalTime += 0.008;
-
-cameraPosition.x = Math.sin(globalTime * 0.5) * 10;
-cameraPosition.z = 20 + Math.cos(globalTime * 0.5) * 8;
-viewMatrix.lookAt(cameraPosition, targetPosition, upVector);
-
-gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-gl.useProgram(program);
-
-gl.uniformMatrix4fv(projLocation, false, projMatrix.elements);
-gl.uniformMatrix4fv(viewLocation, false, viewMatrix.elements);
-gl.uniformMatrix4fv(modelLocation, false, modelMatrix.elements);
-gl.uniform3f(camLocation, cameraPosition.x, cameraPosition.y, cameraPosition.z);
-gl.uniform1f(timeLocation, globalTime);
-
-gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-gl.vertexAttribPointer(posLocation, 3, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(posLocation);
-gl.bindBuffer(gl.ARRAY_BUFFER, normBuffer);
-gl.vertexAttribPointer(normLocation, 3, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(normLocation);
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuffer);
-gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
-
-requestAnimationFrame(animate);
-}
-animate();
+render();
 </script>
 </body>
 </html>
